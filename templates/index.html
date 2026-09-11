@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker No Lot - Finishing Department</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); min-height: 100vh; color: #334155; padding: 50px 20px; }
+        .container { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+        .header { text-align: center; margin-bottom: 6px; margin-top: 10px; }
+        .header h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .header p { color: #64748b; font-size: 15px; }
+        .card-search { background: rgba(255, 255, 255, 0.9); border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); border: 1px solid #ffffff; }
+        .search-group { display: flex; gap: 12px; position: relative; }
+        .input-wrapper { flex-grow: 1; position: relative; }
+        .input-wrapper input { width: 100%; padding: 16px 48px 16px 48px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 16px; background: #f8fafc; font-weight: 500; transition: all 0.2s; }
+        .input-wrapper input:focus { outline: none; border-color: #2563eb; background: #fff; box-shadow: 0 0 0 4px rgba(37,99,235,0.15); }
+        .input-wrapper .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: #94a3b8; }
+        .clear-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: #94a3b8; cursor: pointer; display: none; }
+        .clear-icon:hover { color: #64748b; }
+        .btn-search { background: #2563eb; color: #fff; border: none; padding: 0 32px; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
+        .btn-search:hover { background: #1d4ed8; }
+        .btn-search:active { transform: scale(0.98); }
+        .status-area { margin-top: 14px; font-size: 14px; font-weight: 600; display: none; align-items: center; gap: 6px; }
+        .text-blue { color: #2563eb; } .text-green { color: #16a34a; } .text-red { color: #dc2626; }
+        
+        .alert-overdue-inline { background: #fff1f2; border: 1px solid #fecdd3; border-top: 4px solid #e11d48; color: #9f1239; padding: 16px 20px; border-radius: 12px; font-weight: 800; font-size: 16px; display: none; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); animation: fadeIn 0.3s ease-out; letter-spacing: 1px; }
+        .alert-overdue-inline svg { width: 20px; height: 20px; color: #e11d48; flex-shrink: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+                .table-container { background: #fff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: #0f172a; color: #f8fafc; padding: 16px 24px; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; font-weight: 500; color: #1e293b; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        tr:hover td { background: #f1f5f9; }
+        .badge-sheet { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        
+        /* Gaya mewah untuk teks keterangan Kolom N */
+        .badge-keterangan-n { background: #f0f4ff; color: #1e40af; border: 1px solid #dbeafe; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; margin-left: 12px; display: inline-block; vertical-align: middle; }
+        
+        .font-mono { font-family: monospace; font-size: 15px; color: #64748b; }
+        .text-center { text-align: center; }
+        .text-date { color: #0284c7; font-weight: 600; font-size: 13.5px; }
+        .btn-download { background: #fff; color: #2563eb; border: 1px solid #bfdbfe; padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .btn-download:hover { background: #eff6ff; border-color: #2563eb; }
+        .btn-download svg { width: 14px; height: 14px; }
+        
+        .alert-despatch { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: 4px solid #16a34a; color: #166534; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 18px; text-align: center; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: none; }
+        .shimmer-line { height: 16px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 4px; margin-bottom: 8px; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TRACKER NO LOT DEPARTMEN FINISHING</h1>
+            <p>Cari dan lacak order berdasarkan Nomor Lot secara instan.</p>
+        </div>
+        <div class="card-search">
+            <div class="search-group">
+                <div class="input-wrapper">
+                    <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    <input type="text" id="inputLot" placeholder="Masukkan 8 digit Nomor Lot..." onkeyup="handleInput(event)">
+                    <svg class="clear-icon" id="clearBtn" onclick="resetPencarian()" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </div>
+                <button onclick="lakukanPencarian()" class="btn-search">Cari Data</button>
+            </div>
+            <div id="statusArea" class="status-area"></div>
+        </div>
+
+        <div id="alertOverdue" class="alert-overdue-inline">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>OVERDUE</span>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Order Sudah Di Terima Oleh</th>
+                        <th style="width: 15%;">Nama Sheet</th>
+                        <th style="width: 20%;">Tanggal Diterima</th>
+                        <th style="width: 15%;">No Lot</th>
+                        <th style="width: 15%; text-align: center;">Aksi Laporan</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                    <tr><td colspan="5" class="text-center" style="color: #94a3b8; padding: 50px 0;">Silakan masukkan Nomor Lot untuk memulai pencarian.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="informasiTambahan" class="alert-despatch">📢 ORDER SUDAH DI DESPATCH 📢</div>
+    </div>
+
+    <script>
+function handleInput(event) {
+    const input = document.getElementById('inputLot');
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.style.display = input.value.length > 0 ? "block" : "none";
+    if (event.key === "Enter") { lakukanPencarian(); }
+}
+
+function resetPencarian() {
+    document.getElementById('inputLot').value = "";
+    document.getElementById('clearBtn').style.display = "none";
+    document.getElementById('inputLot').focus();
+}
+
+function ambilNamaFolder(filePath) {
+    if (!filePath) return "-";
+    const bagian = filePath.split('\\');
+    if (bagian.length > 1) { return bagian[bagian.length - 2]; }
+    return filePath;
+}
+
+function lakukanPencarian() {
+    const query = document.getElementById('inputLot').value.trim();
+    const statusArea = document.getElementById('statusArea');
+    const resultBody = document.getElementById('resultBody');
+    const infoTambahan = document.getElementById('informasiTambahan');
+    const alertOverdue = document.getElementById('alertOverdue');
+    
+    if(!query) { alert("Mohon masukkan Nomor Lot terlebih dahulu!"); return; }
+    
+    statusArea.style.display = "block";
+    statusArea.className = "status-area text-blue";
+    statusArea.innerText = "🔄 Sedang menyisir data ke database...";
+    resultBody.innerHTML = `<tr><td colspan="5"><div class="shimmer-line"></div><div class="shimmer-line" style="width: 80%;"></div></td></tr>`;
+    infoTambahan.style.display = "none";
+    alertOverdue.style.display = "none";
+
+    fetch(`/api/cari?lot=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            resultBody.innerHTML = "";
+            if(data.length === 0) {
+                statusArea.className = "status-area text-red";
+                statusArea.innerText = "❌ Pencarian Selesai! Data tidak ditemukan.";
+                resultBody.innerHTML = `<tr><td colspan="5" class="text-center text-red" style="font-weight: bold; padding: 40px 0;">ORDER TIDAK DITEMUKAN / BELUM DI-INDEX</td></tr>`;
+                return;
+            }
+            statusArea.className = "status-area text-green";
+            statusArea.innerHTML = `✅ Pencarian Selesai! Berhasil menemukan <b>${data.length}</b> arsip data laporan.`;
+            
+            let ditemukanFGH = false;
+            let ditemukanOverdueTemplate = false;
+
+            // KUNCI JAVASCRIPT: Ambil teks kolom N dari baris berkas Mobile untuk didistribusikan
+            let teksKolomN = "";
+            data.forEach(row => {
+                if (row.keterangan_n && row.keterangan_n !== "") {
+                    teksKolomN = row.keterangan_n;
+                }
+            });
+
+            data.forEach(row => {
+                if (row.nama_file.toUpperCase().includes('FGH')) { ditemukanFGH = true; }
+                if (row.nama_file.toUpperCase().includes('OVERDUE TEMPLATE')) { ditemukanOverdueTemplate = true; }
+
+                const namaFolder = ambilNamaFolder(row.file_path);
+                const tglInput = row.tanggal_input ? row.tanggal_input : "-";
+                
+                // Jika baris ini adalah APP atau FOOTWEAR, dan teksKolomN dari file mobile ditemukan, pasang label di sampingnya!
+                let labelTambahan = "";
+                const nfUpper = namaFolder.toUpperCase();
+                if ((nfUpper.includes("APP") || nfUpper.includes("FOOTWEAR")) && teksKolomN !== "") {
+                    labelTambahan = `<span class="badge-keterangan-n">${teksKolomN}</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 600; color: #0f172a;">${namaFolder} ${labelTambahan}</td>
+                    <td><span class="badge-sheet">${row.nama_sheet}</span></td>
+                    <td class="text-date">${tglInput}</td>
+                    <td class="font-mono">${row.no_lot}</td>
+                    <td class="text-center">
+                        <button onclick="unduhFile('${row.file_path.replace(/\\/g, '\\\\')}')" class="btn-download">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            <span>Buka File</span>
+                        </button>
+                    </td>`;
+                resultBody.appendChild(tr);
+            });
+            if (ditemukanFGH) { infoTambahan.style.display = "block"; }
+            if (ditemukanOverdueTemplate) { alertOverdue.style.display = "flex"; }
+        })
+        .catch(err => {
+            statusArea.className = "status-area text-red";
+            statusArea.innerText = "⚠️ Terjadi kesalahan koneksi ke server.";
+        });
+}
+function unduhFile(filePath) {
+    fetch('/api/buka', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ path: filePath }) })
+    .then(response => { if (!response.ok) throw new Error(); return response.blob(); })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filePath.split('\\').pop();
+        document.body.appendChild(a); a.click(); a.remove();
+    })
+    .catch(err => alert("Gagal mengunduh file berkas Excel asli."));
+}
+</script>
+</body>
+</html>
