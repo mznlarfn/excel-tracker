@@ -62,4 +62,6 @@ def api_buka():
     return jsonify({"status": "error"}), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Membaca port otomatis dari server Koyeb, jika tidak ada gunakan default 8000
+    port_koyeb = int(os.environ.get("PORT", 8000))
+    app.run(host='0.0.0.0', port=port_koyeb)
