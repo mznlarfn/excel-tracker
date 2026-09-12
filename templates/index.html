@@ -29,7 +29,8 @@
         .alert-overdue-inline svg { width: 20px; height: 20px; color: #e11d48; flex-shrink: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-                .table-container { background: #fff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+                /* KUNCI UTAMA: Menyembunyikan seluruh tabel di awal agar layar HP bersih */
+        .table-container { background: #fff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; display: none; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         th { background: #0f172a; color: #f8fafc; padding: 16px 24px; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
         td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; font-weight: 500; color: #1e293b; }
@@ -57,7 +58,7 @@
             thead { display: none; }
             tr { background: #fff !important; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
             td { text-align: left; padding: 6px 0; border: none; display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; }
-            td:nth-of-type(1)::before { content: "Sudah Di Terima Oleh"; font-weight: 700; color: #64748b; }
+            td:nth-of-type(1)::before { content: "Order Sudah Di Terima Oleh:"; font-weight: 700; color: #64748b; }
             td:nth-of-type(2)::before { content: "Sheet:"; font-weight: 700; color: #64748b; }
             td:nth-of-type(3)::before { content: "Diterima:"; font-weight: 700; color: #64748b; }
             td:nth-of-type(4)::before { content: "No Lot:"; font-weight: 700; color: #64748b; }
@@ -77,7 +78,7 @@
             <div class="search-group">
                 <div class="input-wrapper">
                     <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    <input type="text" id="inputLot" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan Nomor Lot" onkeyup="handleInput(event)">
+                    <input type="text" id="inputLot" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan 8 digit Nomor Lot..." onkeyup="handleInput(event)">
                     <svg class="clear-icon" id="clearBtn" onclick="resetPencarian()" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </div>
                 <button onclick="lakukanPencarian()" class="btn-search">Cari Data</button>
@@ -90,7 +91,8 @@
             <span>OVERDUE</span>
         </div>
 
-        <div class="table-container">
+        <!-- Wadah tabel diberi ID khusus agar JavaScript bisa mengontrol kemunculannya -->
+        <div id="tableWrapper" class="table-container">
             <table>
                 <thead>
                     <tr>
@@ -102,11 +104,10 @@
                     </tr>
                 </thead>
                 <tbody id="resultBody">
-                    <tr><td colspan="5" class="text-center" style="color: #94a3b8; padding: 50px 0;">Silakan masukkan Nomor Lot untuk memulai pencarian.</td></tr>
                 </tbody>
             </table>
         </div>
-        <div id="informasiTambahan" class="alert-despatch">ORDER SUDAH DI DESPATCH</div>
+        <div id="informasiTambahan" class="alert-despatch">📢 ORDER SUDAH DI DESPATCH 📢</div>
     </div>
 
     <script>
@@ -120,6 +121,7 @@ function handleInput(event) {
 function resetPencarian() {
     document.getElementById('inputLot').value = "";
     document.getElementById('clearBtn').style.display = "none";
+    document.getElementById('tableWrapper').style.display = "none"; // Sembunyikan tabel kembali saat di-clear
     document.getElementById('inputLot').focus();
 }
 
@@ -136,12 +138,16 @@ function lakukanPencarian() {
     const resultBody = document.getElementById('resultBody');
     const infoTambahan = document.getElementById('informasiTambahan');
     const alertOverdue = document.getElementById('alertOverdue');
+    const tableWrapper = document.getElementById('tableWrapper');
     
     if(!query) { alert("Mohon masukkan Nomor Lot terlebih dahulu!"); return; }
     
     statusArea.style.display = "block";
     statusArea.className = "status-area text-blue";
     statusArea.innerText = "🔄 Sedang menyisir data ke database...";
+    
+    // Munculkan wadah tabel saat loading untuk menampilkan garis animasi pemindaian
+    tableWrapper.style.display = "block";
     resultBody.innerHTML = `<tr><td colspan="5"><div class="shimmer-line"></div><div class="shimmer-line" style="width: 80%;"></div></td></tr>`;
     infoTambahan.style.display = "none";
     alertOverdue.style.display = "none";
@@ -153,12 +159,14 @@ function lakukanPencarian() {
             if(data.length === 0) {
                 statusArea.className = "status-area text-red";
                 statusArea.innerText = "❌ Pencarian Selesai! Data tidak ditemukan.";
-                resultBody.innerHTML = `<tr><td colspan="5" class="text-center text-red" style="font-weight: bold; padding: 40px 0;">ORDER TIDAK DITEMUKAN / BELUM DI-INDEX</td></tr>`;
+                tableWrapper.style.display = "none"; // Sembunyikan kembali wadah tabel jika kosong
                 return;
             }
+            
             statusArea.className = "status-area text-green";
             statusArea.innerHTML = `✅ Pencarian Selesai! Berhasil menemukan <b>${data.length}</b> arsip data laporan.`;
-            
+            tableWrapper.style.display = "block"; // Tampilkan tabel penuh karena data resmi lolos ditemukan
+
             let ditemukanFGH = false;
             let ditemukanOverdueTemplate = false;
             let teksKolomN = "";
@@ -198,6 +206,7 @@ function lakukanPencarian() {
         .catch(err => {
             statusArea.className = "status-area text-red";
             statusArea.innerText = "⚠️ Terjadi kesalahan koneksi ke server.";
+            tableWrapper.style.display = "none";
         });
 }
 function unduhFile(filePath) {
