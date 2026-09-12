@@ -3,8 +3,16 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 
-app = Flask(__name__)
+# KUNCI UTAMA VERCEL: Menentukan jalur folder HTML secara absolut agar tidak Not Found
+base_dir = os.path.dirname(os.path.abspath(__file__))
+template_dir = os.path.join(base_dir, '..', 'templates')
+
+app = Flask(__name__, template_folder=template_dir)
+
+# ----------------- KONFIGURASI UTAMA -----------------
+# ⚠️ PENTING: Masukkan alamat Connection String Neon.tech Anda di sini!
 DB_CONF = "postgresql://neondb_owner:npg_zd6ZRfEQIBb8@ep-shy-term-b33g219e-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# -----------------------------------------------------
 
 URUTAN_FOLDER = [
     "dth", "label", "bonding", "rwb", "mobile operator", "cop", 
@@ -30,7 +38,6 @@ def api_cari():
     conn = psycopg2.connect(DB_CONF)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    # Ambil kolom keterangan_n dari database
     sql = """
         SELECT nama_file, nama_sheet, no_lot, file_path, keterangan_n,
                TO_CHAR(file_modified_at, 'DD-MM-YYYY HH24:MI') as tanggal_input
@@ -60,7 +67,3 @@ def api_buka():
     if path_file and os.path.exists(path_file):
         return send_file(path_file, as_attachment=True)
     return jsonify({"status": "error"}), 404
-
-# Di bagian paling bawah cukup sisakan ini saja (khusus untuk serverless Vercel)
-# app.run() dihapus karena Vercel yang akan menyalakan aplikasinya secara otomatis
-
