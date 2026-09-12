@@ -4,7 +4,7 @@ from psycopg2.extras import RealDictCursor
 import os
 
 app = Flask(__name__)
-DB_CONF = "dbname=db_finishing_tracker user=postgres password=admin123 host=localhost port=5432"
+DB_CONF = "postgresql://neondb_owner:npg_zd6ZRfEQIBb8@ep-shy-term-b33g219e-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 URUTAN_FOLDER = [
     "dth", "label", "bonding", "rwb", "mobile operator", "cop", 
