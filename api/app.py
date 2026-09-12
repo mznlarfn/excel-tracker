@@ -11,7 +11,7 @@ app = Flask(__name__, template_folder=template_dir)
 
 # ----------------- KONFIGURASI UTAMA -----------------
 # ⚠️ PENTING: Masukkan alamat Connection String Neon.tech Anda di sini!
-DB_CONF = "postgresql://postgres:password_kamu@ep-cool-pool-1234.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+DB_CONF = "postgresql://neondb_owner:npg_zd6ZRfEQIBb8@ep-shy-term-b33g219e-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 # -----------------------------------------------------
 
 # 11 Urutan prioritas resmi folder pengerjaan Departemen Finishing
