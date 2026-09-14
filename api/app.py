@@ -30,7 +30,7 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Mengonversi teks string tanggal menjadi format Date resmi (TO_DATE)
+# 📊 API STATISTIK: Diperbarui menggunakan pemetaan format standar internasional (YYYY-MM-DD)
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
@@ -45,16 +45,21 @@ def api_statistik():
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 1. 🔐 KUNCI TOTAL ORDER: Konversi manual string 'DD-MM-YYYY' ke penanggalan asli
-        # Menggunakan perbandingan teks berformat '-MM-YYYY' agar aman 100% dari kesalahan tipe data database
-        pattern_filter = f"%-{bulan_str}-{tahun_str}%"
+        # 🔐 STRATEGI BARU ANTI-GAGAL: 
+        # Membuat 2 pola filter teks sekaligus untuk mengantisipasi segala jenis format di database Anda:
+        # Pola A (Internasional): "2026-09%"
+        # Pola B (Indonesia/Eropa): "%-09-2026%"
+        pola_internasional = f"{tahun_str}-{bulan_str}%"
+        pola_lokal = f"%-{bulan_str}-{tahun_str}%"
         
+        # 1. KUNCI TOTAL ORDER: Menyaring data yang cocok dengan Pola A atau Pola B
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE CAST(file_modified_at AS VARCHAR) LIKE %s;
+            WHERE CAST(file_modified_at AS VARCHAR) LIKE %s 
+               OR CAST(file_modified_at AS VARCHAR) LIKE %s;
         """
-        cursor.execute(query_order, (pattern_filter,))
+        cursor.execute(query_order, (pola_internasional, pola_lokal))
         total_order = cursor.fetchone()['total']
         
         # 2. Hitung total lot krisis di FOLDER overdue (Akumulasi Realtime Global)
@@ -65,14 +70,14 @@ def api_statistik():
         """)
         total_overdue = cursor.fetchone()['total']
         
-        # 3. 🔐 KUNCI DESPATCH FGH: Menyaring folder FGH dikombinasikan dengan teks filter bulan berjalan
+        # 3. KUNCI DESPATCH FGH: Menyaring folder FGH dikombinasikan dengan Pola A atau Pola B
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
             WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
-              AND CAST(file_modified_at AS VARCHAR) LIKE %s;
+              AND (CAST(file_modified_at AS VARCHAR) LIKE %s OR CAST(file_modified_at AS VARCHAR) LIKE %s);
         """
-        cursor.execute(query_fgh, (pattern_filter,))
+        cursor.execute(query_fgh, (pola_internasional, pola_lokal))
         total_fgh = cursor.fetchone()['total']
         
         cursor.close()
