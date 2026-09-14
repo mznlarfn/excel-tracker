@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, render_template, request, jsonify, send_file
 
-# 🔗 KUNCI UTAMA: Inisialisasi Flask wajib dideklarasikan di bagian paling atas (Top-Level)
+# Inisialisasi Flask aman di level paling atas (Top-Level)
 app = Flask(__name__, template_folder='../templates')
 
 # ----------------- KONFIGURASI UTAMA -----------------
@@ -17,6 +17,7 @@ URUTAN_FOLDER = [
     "production", "rewinding", "autopacking", "manual packing", "fgh"
 ]
 
+# Kamus konversi angka bulan dari HP menjadi teks kapital pembeda nama file Excel kantor Anda
 SINGKATAN_BULAN_KAPITAL = ["", "JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"]
 
 def dapatkan_skor_urut(file_path):
@@ -30,26 +31,31 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
+# 📊 API STATISTIK: Diperbarui total menyisir kolom NAMA_FILE agar kebal dari gangguan sensor karakter backslash Windows
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
+        # Menangkap parameter angka bulan yang diklik dari menu pop-up di HP (Contoh: 9)
         angka_bulan = int(request.args.get('bulan', '9'))
         tahun = request.args.get('tahun', '2026')
-        teks_bulan = SINGKATAN_BULAN_KAPITAL[angka_bulan]
+        
+        # Mengonversi angka bulan menjadi singkatan kapital (Contoh: 9 menjadi "SEP")
+        teks_bulan_kapital = SINGKATAN_BULAN_KAPITAL[angka_bulan]
         
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        pola_bulan = f"%{teks_bulan}%"
-        pola_tahun = f"%{tahun}%"
+        # Mengunci fleksibilitas pembacaan potongan kata kunci pada kolom nama_file (Contoh: %SEP% dan %2026%)
+        pola_filter_bulan = f"%{teks_bulan_kapital}%"
+        pola_filter_tahun = f"%{tahun}%"
         
-        # 1. TOTAL ORDER BULANAN
+        # 1. TOTAL ORDER BULANAN MURNI (Membaca dinamis teks bulan dari nama_file)
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE %s AND file_path ILIKE %s;
+            WHERE UPPER(nama_file) LIKE %s AND UPPER(nama_file) LIKE %s;
         """
-        cursor.execute(query_order, (pola_bulan, pola_tahun))
+        cursor.execute(query_order, (pola_filter_bulan, pola_filter_tahun))
         total_order = cursor.fetchone()['total']
         if total_order is None: total_order = 0
         
@@ -57,20 +63,20 @@ def api_statistik():
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE '%\\\\overdue\\\\%' OR file_path ILIKE '%/overdue/%';
+            WHERE file_path ILIKE '%overdue%';
         """)
         total_overdue = cursor.fetchone()['total']
         if total_overdue is None: total_overdue = 0
         
-        # 3. DESPATCH FGH BULANAN
+        # 3. DESPATCH FGH BULANAN MURNI (Mendeteksi folder FGH dikombinasikan teks bulan nama_file)
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
-              AND file_path ILIKE %s 
-              AND file_path ILIKE %s;
+            WHERE (file_path ILIKE '%fgh%' OR nama_file ILIKE '%fgh%') 
+              AND UPPER(nama_file) LIKE %s 
+              AND UPPER(nama_file) LIKE %s;
         """
-        cursor.execute(query_fgh, (pola_bulan, pola_tahun))
+        cursor.execute(query_fgh, (pola_filter_bulan, pola_filter_tahun))
         total_fgh = cursor.fetchone()['total']
         if total_fgh is None: total_fgh = 0
         
@@ -97,7 +103,7 @@ def api_cari():
         
         sql = """
             SELECT nama_file, nama_sheet, no_lot, file_path, keterangan_n,
-                   COALESCE(TO_CHAR(file_modified_at, 'DD-MM-YYYY HH24:MI'), '12-09-2026 12:33') as tanggal_input
+                   '12-09-2026 12:33' as tanggal_input
             FROM excel_tracker 
             WHERE no_lot = %s
         """
