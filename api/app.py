@@ -9,7 +9,7 @@ template_dir = os.path.join(base_dir, '..', 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
 # ----------------- KONFIGURASI UTAMA -----------------
-# ⚠️ PENTING: Masukkan alamat Connection String Neon.tech Anda di sini!
+# ⚠️ PENTING: Gunakan alamat Connection String Neon.tech Anda yang sudah aktif!
 DB_CONF = "postgresql://neondb_owner:npg_zd6ZRfEQIBb8@ep-shy-term-b33g219e-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 # -----------------------------------------------------
 
@@ -29,7 +29,7 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API BARU: Menghitung statistik ringkas untuk widget halaman depan
+# 📊 API STATISTIK: Diperbarui agar hitungan OVERDUE murni menyisir struktur path FOLDER
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
@@ -40,12 +40,21 @@ def api_statistik():
         cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker;")
         total_order = cursor.fetchone()['total']
         
-        # 2. Hitung total lot yang menyangkut di folder Overdue
-        cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker WHERE file_path ILIKE '%overdue%';")
+        # 2. 🔐 KUNCI LOGIKA BARU: Menyaring path agar hanya menghitung file yang berada di dalam FOLDER bernama 'overdue'
+        # Menggunakan pencarian pembatas backslash '\\overdue\\' atau slash '/overdue/' untuk memastikan itu adalah nama FOLDER
+        cursor.execute("""
+            SELECT COUNT(DISTINCT no_lot) as total 
+            FROM excel_tracker 
+            WHERE file_path ILIKE '%\\\\overdue\\\\%' OR file_path ILIKE '%/overdue/%';
+        """)
         total_overdue = cursor.fetchone()['total']
         
-        # 3. Hitung berapa banyak lot yang sudah sukses sampai ke gudang FGH
-        cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker WHERE file_path ILIKE '%fgh%';")
+        # 3. Hitung berapa banyak lot yang sudah sukses sampai ke FOLDER fgh
+        cursor.execute("""
+            SELECT COUNT(DISTINCT no_lot) as total 
+            FROM excel_tracker 
+            WHERE file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%';
+        """)
         total_fgh = cursor.fetchone()['total']
         
         cursor.close()
