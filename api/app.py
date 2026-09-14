@@ -18,8 +18,8 @@ URUTAN_FOLDER = [
     "production", "rewinding", "autopacking", "manual packing", "fgh"
 ]
 
-# Kamus konversi angka bulan ke singkatan nama file Excel Anda (Contoh: 9 -> sep)
-SINGKATAN_BULAN = ["", "jan", "feb", "mar", "apr", "mei", "jun", "jul", "agu", "sep", "okt", "nov", "des"]
+# Kamus konversi angka bulan ke huruf BESAR murni sesuai format nama file Excel lantai pabrik Anda
+SINGKATAN_BULAN_KAPITAL = ["", "JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"]
 
 def dapatkan_skor_urut(file_path):
     if not file_path: return 999
@@ -32,37 +32,36 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui total agar filter teks file_path membaca bulan yang diklik secara dinamis
+# 📊 API STATISTIK: Diperbarui menggunakan fungsi UPPER agar filter bulan kebal dari error huruf besar/kecil
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
-        # Menangkap angka bulan yang diklik dari HP (Contoh: "9")
         angka_bulan = int(request.args.get('bulan', '9'))
         tahun = request.args.get('tahun', '2026')
         
-        # Mengonversi angka bulan menjadi teks singkatan (Contoh: 9 menjadi "sep")
-        teks_bulan_singkat = SINGKATAN_BULAN[angka_bulan]
+        teks_bulan_kapital = SINGKATAN_BULAN_KAPITAL[angka_bulan]
         
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 🔗 KUNCI FILTER DINAMIS: Menyisir file_path berdasarkan tahun dan singkatan bulan pilihan user
-        pola_filter_bulan = f"%{teks_bulan_singkat}%"
+        # 🔐 STRATEGI MUTLAK ANTI-GAGAL:
+        # Menambahkan tanda % di sekeliling teks bulan dan tahun agar fleksibel membaca file (Misal: %SEP% dan %2026%)
+        pola_filter_bulan = f"%{teks_bulan_kapital}%"
         pola_filter_tahun = f"%{tahun}%"
         
-        # 1. TOTAL ORDER BULANAN DINAMIS
+        # 1. TOTAL ORDER BULANAN (Kebal Huruf Besar / Kecil dengan fungsi UPPER)
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE %s AND file_path ILIKE %s;
+            WHERE UPPER(file_path) LIKE %s AND UPPER(file_path) LIKE %s;
         """
-        cursor.execute(query_order, (pola_filter_tahun, pola_filter_bulan))
+        cursor.execute(query_order, (pola_filter_bulan, pola_filter_tahun))
         total_order = cursor.fetchone()['total']
         
-        # Jika pada bulan pilihan datanya masih kosong (0), pancing hitungan global agar tidak merusak visual
-        if total_order == 0:
-            cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker;")
-            total_order = cursor.fetchone()['total']
+        # Skenario Cadangan Aman: Jika user memilih bulan yang datanya memang belum di-index sama sekali, 
+        # kembalikan nilai 0 asli agar visual grafik monitoring bulanan akurat.
+        if total_order is None:
+            total_order = 0
         
         # 2. TOTAL OVERDUE GLOBAL REALTIME
         cursor.execute("""
@@ -72,14 +71,19 @@ def api_statistik():
         """)
         total_overdue = cursor.fetchone()['total']
         
-        # 3. DESPATCH FGH BULANAN DINAMIS
+        # 3. DESPATCH FGH BULANAN (Kebal Huruf Besar / Kecil dengan fungsi UPPER)
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE (file_path ILIKE '%fgh%') AND file_path ILIKE %s AND file_path ILIKE %s;
+            WHERE UPPER(file_path) LIKE '%FGH%' 
+              AND UPPER(file_path) LIKE %s 
+              AND UPPER(file_path) LIKE %s;
         """
-        cursor.execute(query_fgh, (pola_filter_tahun, pola_filter_bulan))
+        cursor.execute(query_fgh, (pola_filter_bulan, pola_filter_tahun))
         total_fgh = cursor.fetchone()['total']
+        
+        if total_fgh is None:
+            total_fgh = 0
         
         cursor.close()
         conn.close()
@@ -91,12 +95,9 @@ def api_statistik():
             "total_fgh": total_fgh
         })
     except Exception as e:
-        # Skenario penyelamat otomatis jika server database mengalami antrean sibuk
         return jsonify({
-            "status": "success",
-            "total_order": 230722,
-            "total_overdue": 0,
-            "total_fgh": 0
+            "status": "error",
+            "message": str(e)
         })
 
 @app.route('/api/cari', methods=['GET'])
