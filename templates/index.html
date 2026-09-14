@@ -57,6 +57,8 @@
         
         .timeline-content { flex-grow: 1; padding-left: 10px; padding-top: 1px; min-width: 0; }
         .timeline-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        
+        /* Modifikasi Kotak Informasi Meta */
         .timeline-meta { font-size: 12.5px; color: #64748b; font-weight: 500; display: flex; flex-direction: column; gap: 3px; background: #f8fafc; padding: 10px 14px; border-radius: 10px; border: 1px solid #f1f5f9; margin-top: 4px; }
         .timeline-meta div { display: flex; justify-content: space-between; border-bottom: 1px dashed #f1f5f9; padding-bottom: 2px; }
         .timeline-meta div:last-child { border-bottom: none; padding-bottom: 0; }
@@ -142,22 +144,29 @@
     </div>
 
     <script>
+// PENTING: Memicu pembacaan angka saat website pertama kali dibuka
 document.addEventListener("DOMContentLoaded", function() {
     muatDataDashboard();
 });
 
 function muatDataDashboard() {
+    // Diperbarui: Pemaksaan penanganan tanggapan agar angka murni sukses didorong keluar
     fetch('/api/statistik')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error("Gagal mengambil data");
+            return response.json();
+        })
         .then(data => {
-            if(data.status === "success") {
-                document.getElementById('statTotalOrder').innerText = data.total_order;
-                document.getElementById('statTotalOverdue').innerText = data.total_overdue;
-                document.getElementById('statTotalFgh').innerText = data.total_fgh;
-            }
+            document.getElementById('statTotalOrder').innerText = data.total_order !== undefined ? data.total_order : "0";
+            document.getElementById('statTotalOverdue').innerText = data.total_overdue !== undefined ? data.total_overdue : "0";
+            document.getElementById('statTotalFgh').innerText = data.total_fgh !== undefined ? data.total_fgh : "0";
         })
         .catch(err => {
-            console.log("Gagal memuat widget ringkasan.");
+            console.error("Gagal memuat widget ringkasan harian:", err);
+            // Skenario Cadangan jika database sedang sleep / sibuk
+            document.getElementById('statTotalOrder').innerText = "0";
+            document.getElementById('statTotalOverdue').innerText = "0";
+            document.getElementById('statTotalFgh').innerText = "0";
         });
 }
 
@@ -241,8 +250,8 @@ function lakukanPencarian() {
                 let stringJam = "-";
                 if (row.tanggal_input && row.tanggal_input !== "-") {
                     const bagianWaktu = row.tanggal_input.split(' ');
-                    stringTgl = bagianWaktu;
-                    stringJam = bagianWaktu ? bagianWaktu + " WIB" : "-";
+                    stringTgl = bagianWaktu[0];
+                    stringJam = bagianWaktu[1] ? bagianWaktu[1] + " WIB" : "-";
                 }
 
                 let labelTambahan = "";
@@ -269,7 +278,7 @@ function lakukanPencarian() {
                 const divItem = document.createElement('div');
                 divItem.className = classKustom;
                 
-                // 🔗 KUNCI PERUBAHAN: Baris pertama meta langsung menampilkan namaFolder tanpa teks label "Folder:"
+                // 🔗 KUNCI PERUBAHAN: Baris Progress telah dihapus permanen. Hanya menyisakan Sheet dan No Lot.
                 divItem.innerHTML = `
                     <div class="timeline-time">
                         <div class="date-bold">${stringTgl}</div>
@@ -284,7 +293,6 @@ function lakukanPencarian() {
                             ${labelTambahan}
                         </div>
                         <div class="timeline-meta">
-                            <div><span class="meta-label">Progress:</span><span class="meta-val" style="color: #003399;">${namaFolder}</span></div>
                             <div><span class="meta-label">Sheet:</span><span class="meta-val"><span class="badge-sheet">${row.nama_sheet}</span></span></div>
                             <div><span class="meta-label">No Lot:</span><span class="meta-val font-mono">${row.no_lot}</span></div>
                         </div>
