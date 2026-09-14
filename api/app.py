@@ -29,11 +29,11 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui total menyisir angka folder dua digit (Anti Gagal & Mengunci Per Bulan Mutlak)
+# 📊 API STATISTIK: Diperbarui menggunakan filter string penanggalan murni (Anti Gagal & Terisolasi Per Bulan)
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
-        # Menangkap parameter angka bulan yang diklik dari HP (Contoh: "9")
+        # Menangkap angka bulan yang diklik dari menu pop-up di HP (Contoh: "9")
         angka_bulan = int(request.args.get('bulan', '9'))
         tahun = request.args.get('tahun', '2026')
         
@@ -43,22 +43,17 @@ def api_statistik():
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 🔐 STRATEGI GANDA ANTI-GAGAL (Menyaring angka folder pabrik \09. atau /09. atau nama file 2026)
-        pola_folder_win = f"%\\{bulan_dua_digit}.%"
-        pola_folder_linux = f"%/{bulan_dua_digit}.%"
-        pola_tahun = f"%{tahun}%"
-        
-        # Jika bulan September (9), kita tambahkan toleransi teks "SEP" untuk membaca sisa data migrasi awal
-        pola_tambahan_sep = "%SEP%" if angka_bulan == 9 else "%KOSONG_BLANK%"
+        # 🔐 STRATEGI UTAMA: Mencari kecocokan string teks akhir tanggal (Contoh: %-09-2026% untuk September)
+        pola_tanggal_filter = f"%-{bulan_dua_digit}-{tahun}%"
         
         # 1. TOTAL ORDER BULANAN MURNI
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE (file_path LIKE %s OR file_path LIKE %s OR UPPER(nama_file) LIKE %s)
-              AND file_path LIKE %s;
+            WHERE CAST(file_modified_at AS VARCHAR) LIKE %s 
+               OR CAST(nama_file AS VARCHAR) LIKE %s;
         """
-        cursor.execute(query_order, (pola_folder_win, pola_folder_linux, pola_tambahan_sep, pola_tahun))
+        cursor.execute(query_order, (pola_tanggal_filter, pola_tanggal_filter))
         total_order = cursor.fetchone()['total']
         if total_order is None: total_order = 0
         
@@ -76,10 +71,9 @@ def api_statistik():
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
             WHERE (file_path ILIKE '%fgh%' OR nama_file ILIKE '%fgh%') 
-              AND (file_path LIKE %s OR file_path LIKE %s OR UPPER(nama_file) LIKE %s)
-              AND file_path LIKE %s;
+              AND (CAST(file_modified_at AS VARCHAR) LIKE %s OR CAST(nama_file AS VARCHAR) LIKE %s);
         """
-        cursor.execute(query_fgh, (pola_folder_win, pola_folder_linux, pola_tambahan_sep, pola_tahun))
+        cursor.execute(query_fgh, (pola_tanggal_filter, pola_tanggal_filter))
         total_fgh = cursor.fetchone()['total']
         if total_fgh is None: total_fgh = 0
         
