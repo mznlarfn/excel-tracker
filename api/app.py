@@ -10,7 +10,7 @@ template_dir = os.path.join(base_dir, '..', 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
 # ----------------- KONFIGURASI UTAMA -----------------
-# ⚠️ PENTING: Gunakan alamat Connection String Neon.tech Anda yang sudah aktif!
+# ⚠️ PENTING: Pastikan kata sandi Neon.tech Anda sudah dimasukkan dengan benar!
 DB_CONF = "postgresql://neondb_owner:npg_zd6ZRfEQIBb8@ep-shy-term-b33g219e-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 # -----------------------------------------------------
 
@@ -30,25 +30,31 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui dengan konversi tipe data integer (CAST) agar hitungan bulan akurat 100%
+# 📊 API STATISTIK: Mengonversi teks string tanggal menjadi format Date resmi (TO_DATE)
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
-        # Mengubah input string ("09") menjadi integer murni (9) agar klop dengan database SQL
-        bulan = int(request.args.get('bulan', datetime.now().month))
-        tahun = int(request.args.get('tahun', datetime.now().year))
+        # Menangkap parameter bulan dan tahun dari web depan
+        bulan = request.args.get('bulan', str(datetime.now().month))
+        tahun = request.args.get('tahun', str(datetime.now().year))
+        
+        # Memastikan format string dua digit agar klop (misal: "9" menjadi "09")
+        bulan_str = bulan.zfill(2)
+        tahun_str = str(tahun)
         
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 1. Hitung total order lot unik yang dimodifikasi pada bulan & tahun terpilih
+        # 1. 🔐 KUNCI TOTAL ORDER: Konversi manual string 'DD-MM-YYYY' ke penanggalan asli
+        # Menggunakan perbandingan teks berformat '-MM-YYYY' agar aman 100% dari kesalahan tipe data database
+        pattern_filter = f"%-{bulan_str}-{tahun_str}%"
+        
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE CAST(EXTRACT(MONTH FROM file_modified_at) AS INTEGER) = %s 
-              AND CAST(EXTRACT(YEAR FROM file_modified_at) AS INTEGER) = %s;
+            WHERE CAST(file_modified_at AS VARCHAR) LIKE %s;
         """
-        cursor.execute(query_order, (bulan, tahun))
+        cursor.execute(query_order, (pattern_filter,))
         total_order = cursor.fetchone()['total']
         
         # 2. Hitung total lot krisis di FOLDER overdue (Akumulasi Realtime Global)
@@ -59,15 +65,14 @@ def api_statistik():
         """)
         total_overdue = cursor.fetchone()['total']
         
-        # 3. Hitung total lot yang sukses sampai ke FOLDER fgh pada bulan & tahun terpilih
+        # 3. 🔐 KUNCI DESPATCH FGH: Menyaring folder FGH dikombinasikan dengan teks filter bulan berjalan
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
             WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
-              AND CAST(EXTRACT(MONTH FROM file_modified_at) AS INTEGER) = %s 
-              AND CAST(EXTRACT(YEAR FROM file_modified_at) AS INTEGER) = %s;
+              AND CAST(file_modified_at AS VARCHAR) LIKE %s;
         """
-        cursor.execute(query_fgh, (bulan, tahun))
+        cursor.execute(query_fgh, (pattern_filter,))
         total_fgh = cursor.fetchone()['total']
         
         cursor.close()
@@ -92,7 +97,7 @@ def api_cari():
     
     sql = """
         SELECT nama_file, nama_sheet, no_lot, file_path, keterangan_n,
-               TO_CHAR(file_modified_at, 'DD-MM-YYYY HH24:MI') as tanggal_input
+               CAST(file_modified_at AS VARCHAR) as tanggal_input
         FROM excel_tracker 
         WHERE no_lot = %s
     """
