@@ -2,77 +2,93 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tracker No Lot - Finishing Department</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; color: #1e293b; padding: 40px 16px; }
-        .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; color: #1e293b; padding: 30px 16px; line-height: 1.5; }
+        .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         
         .header { text-align: center; padding: 10px 0; margin-bottom: 4px; }
-        .header h1 { font-size: 28px; font-weight: 800; color: #003399; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; margin-bottom: 6px; }
-        .header p { color: #64748b; font-size: 14.5px; font-weight: 500; }
+        .header h1 { font-size: 26px; font-weight: 800; color: #003399; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; margin-bottom: 8px; }
+        .header p { color: #64748b; font-size: 14px; font-weight: 500; }
         
-        .card-search { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px -5px rgba(0, 51, 153, 0.05); border: 1px solid #e2e8f0; }
+        .card-search { background: #ffffff; border-radius: 18px; padding: 20px; box-shadow: 0 10px 25px -5px rgba(0, 51, 153, 0.04); border: 1px solid #e2e8f0; }
         .search-group { display: flex; gap: 12px; position: relative; }
         .input-wrapper { flex-grow: 1; position: relative; }
-        .input-wrapper input { width: 100%; padding: 16px 48px 16px 48px; border: 1.5px solid #cbd5e1; border-radius: 14px; font-size: 16px; background: #f8fafc; font-weight: 500; transition: all 0.25s; -webkit-appearance: none; appearance: none; }
+        .input-wrapper input { width: 100%; padding: 15px 44px 15px 44px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 15px; background: #f8fafc; font-weight: 500; transition: all 0.2s; -webkit-appearance: none; appearance: none; }
         .input-wrapper input:focus { outline: none; border-color: #003399; background: #fff; box-shadow: 0 0 0 4px rgba(0, 51, 153, 0.1); }
-        .input-wrapper .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: #94a3b8; }
-        .clear-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: #94a3b8; cursor: pointer; display: none; }
-        .clear-icon:hover { color: #64748b; }
+        .input-wrapper .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8; }
+        .clear-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8; cursor: pointer; display: none; }
         
-        .btn-search { background: #003399; color: #fff; border: none; padding: 0 32px; font-size: 15px; font-weight: 600; border-radius: 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0, 51, 153, 0.15); }
-        .btn-search:hover { background: #002277; transform: translateY(-1px); }
+        .btn-search { background: #003399; color: #fff; border: none; padding: 0 28px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+        .btn-search:hover { background: #002277; }
         
-        .status-area { margin-top: 14px; font-size: 14px; font-weight: 600; display: none; }
+        .status-area { margin-top: 12px; font-size: 13.5px; font-weight: 600; display: none; }
         .text-blue { color: #003399; } .text-green { color: #16a34a; } .text-red { color: #dc2626; }
         
-        .alert-overdue-inline { background: #fff1f2; border: 1px solid #fecdd3; border-top: 4px solid #e11d48; color: #9f1239; padding: 14px 20px; border-radius: 14px; font-weight: 800; font-size: 15px; display: none; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-        .alert-overdue-inline svg { width: 18px; height: 18px; color: #e11d48; }
-        .alert-despatch { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: 4px solid #16a34a; color: #166534; padding: 18px; border-radius: 14px; font-weight: 800; font-size: 16px; text-align: center; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: none; }
+        .alert-overdue-inline { background: #fff1f2; border: 1px solid #fecdd3; border-top: 4px solid #e11d48; color: #9f1239; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; display: none; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .alert-overdue-inline svg { width: 16px; height: 16px; color: #e11d48; }
+        .alert-despatch { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: 4px solid #16a34a; color: #166534; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 15px; text-align: center; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: none; }
 
-        /* ─── STRUKTUR LINIMASA GAYA DHL ─── */
-        .timeline-container { background: #ffffff; border-radius: 20px; padding: 32px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); display: none; position: relative; }
+        /* ─── LINIMASA ADAPTIF PERFECT ALIGNMENT ─── */
+        .timeline-container { background: #ffffff; border-radius: 20px; padding: 28px 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); display: none; position: relative; }
         .timeline-list { position: relative; list-style: none; padding-left: 0; }
-        .timeline-list.has-data::before { content: ''; position: absolute; left: 160px; top: 15px; height: calc(100% - 30px); width: 2px; background: #cbd5e1; }
         
-        .timeline-item { display: flex; margin-bottom: 24px; position: relative; }
+        /* 🔗 SOLUSI MUTLAK: Mengunci koordinat garis abu agar selalu mengekor posisi persis di tengah kolom badge pembungkus */
+        .timeline-list.has-data::before { content: ''; position: absolute; left: calc(120px + 21px); top: 15px; height: calc(100% - 30px); width: 2px; background: #cbd5e1; z-index: 1; }
+        
+        .timeline-item { display: flex; margin-bottom: 24px; position: relative; width: 100%; }
         .timeline-item:last-child { margin-bottom: 0; }
         
-        .timeline-time { width: 140px; text-align: right; font-size: 13.5px; color: #64748b; font-weight: 500; padding-top: 2px; padding-right: 10px; flex-shrink: 0; }
-        .timeline-time .date-bold { font-size: 14px; color: #1e293b; font-weight: 700; margin-bottom: 2px; }
+        /* Blok Waktu Kiri (Lebar Tetap Dikunci di Layar Desktop) */
+        .timeline-time { width: 120px; text-align: right; font-size: 13px; color: #64748b; font-weight: 500; padding-top: 2px; padding-right: 15px; flex-shrink: 0; }
+        .timeline-time .date-bold { font-size: 13.5px; color: #1e293b; font-weight: 700; margin-bottom: 1px; }
         
+        /* Pembungkus Badge Tengah */
         .timeline-badge-wrapper { width: 42px; display: flex; justify-content: center; position: relative; flex-shrink: 0; }
-        .timeline-badge { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: 3px solid #94a3b8; z-index: 2; margin-top: 4px; box-shadow: 0 0 0 4px #ffffff; }
+        .timeline-badge { width: 14px; height: 14px; border-radius: 50%; background: #ffffff; border: 3px solid #94a3b8; z-index: 2; margin-top: 4px; box-shadow: 0 0 0 4px #ffffff; }
         
-        .timeline-item.is-fgh .timeline-badge { width: 22px; height: 22px; background: #16a34a; border: 4px solid #ffffff; box-shadow: 0 0 0 3px #16a34a; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
+        /* Centang Hijau FGH */
+        .timeline-item.is-fgh .timeline-badge { width: 22px; height: 22px; background: #16a34a; border: 3px solid #ffffff; box-shadow: 0 0 0 3px #16a34a; margin-top: 1px; display: flex; align-items: center; justify-content: center; z-index: 3; }
         .timeline-item.is-fgh .timeline-badge::after { content: '✓'; color: #ffffff; font-size: 11px; font-weight: 900; }
-        
-        .timeline-content { flex-grow: 1; padding-left: 14px; padding-top: 1px; }
-        .timeline-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-        .timeline-meta { font-size: 13px; color: #64748b; font-weight: 500; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .badge-sheet { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; }
-        .badge-keterangan-n { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; padding: 2px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; }
-        .font-mono { font-family: monospace; font-size: 13.5px; color: #475569; font-weight: 600; }
-        
-        .btn-action-view { background: transparent; color: #003399; border: none; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; transition: color 0.2s; margin-top: 4px; }
-        .btn-action-view:hover { color: #001155; text-decoration: underline; }
-        .btn-action-view svg { width: 14px; height: 14px; }
 
-                @media (max-width: 640px) {
-            body { padding: 20px 12px; }
-            .header h1 { font-size: 22px; }
-            .search-group { flex-direction: column; gap: 12px; }
-            .btn-search { width: 100%; padding: 15px 0; font-size: 15px; }
-            .timeline-container { padding: 20px 12px; }
-            .timeline-list::before { left: 75px; }
-            .timeline-time { width: 65px; text-align: left; font-size: 11.5px; padding-right: 0; }
-            .timeline-time .date-bold { font-size: 12.5px; }
+                /* Konten Detail Laporan */
+        .timeline-content { flex-grow: 1; padding-left: 10px; padding-top: 1px; min-width: 0; }
+        .timeline-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .timeline-meta { font-size: 12.5px; color: #64748b; font-weight: 500; display: flex; flex-direction: column; gap: 3px; background: #f8fafc; padding: 10px 14px; border-radius: 10px; border: 1px solid #f1f5f9; margin-top: 4px; }
+        .timeline-meta div { display: flex; justify-content: space-between; border-bottom: 1px dashed #f1f5f9; padding-bottom: 2px; }
+        .timeline-meta div:last-child { border-bottom: none; padding-bottom: 0; }
+        .timeline-meta span.meta-label { color: #64748b; font-weight: 600; }
+        .timeline-meta span.meta-val { color: #1e293b; font-weight: 700; text-align: right; }
+        
+        .badge-sheet { background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 4px; font-size: 11.5px; font-weight: 700; }
+        .badge-keterangan-n { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase; }
+        .font-mono { font-family: monospace; font-size: 13px; color: #0f172a; font-weight: 700; }
+        
+        .btn-action-view { background: #ffffff; color: #003399; border: 1.5px solid #dbeafe; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; margin-top: 8px; width: 100%; justify-content: center; box-shadow: 0 2px 4px rgba(0, 51, 153, 0.02); }
+        .btn-action-view:hover { background: #f0f4ff; border-color: #003399; }
+        .btn-action-view svg { width: 14px; height: 14px; }
+        
+        .shimmer-line { height: 14px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 4px; margin-bottom: 6px; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* 📱 RESPONSIVITAS TOTAL SELURUH JENIS HP LINTAS UKURAN SCREEN */
+        @media (max-width: 640px) {
+            body { padding: 16px 8px; }
+            .header h1 { font-size: 20px; }
+            .search-group { flex-direction: column; gap: 10px; }
+            .btn-search { width: 100%; padding: 14px 0; font-size: 15px; }
+            .timeline-container { padding: 20px 10px; }
+            
+            /* 🔗 PENYELARASAN DINAMIS DI HP: Ukuran lebar kolom jam dikurangi dan garis ikut bergeser presisi mengikuti pergerakan lencana */
+            .timeline-list.has-data::before { left: calc(75px + 12px); }
+            .timeline-time { width: 75px; text-align: left; font-size: 11px; padding-right: 5px; }
+            .timeline-time .date-bold { font-size: 11.5px; }
             .timeline-badge-wrapper { width: 24px; }
-            .timeline-content { padding-left: 6px; }
-            .timeline-title { font-size: 13.5px; }
-            .timeline-meta { font-size: 12px; gap: 4px; }
+            .timeline-content { padding-left: 4px; }
+            .timeline-title { font-size: 13.5px; gap: 6px; }
+            .timeline-meta { padding: 8px 10px; font-size: 12px; }
         }
     </style>
 </head>
@@ -87,7 +103,7 @@
             <div class="search-group">
                 <div class="input-wrapper">
                     <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    <input type="text" id="inputLot" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan Nomor Lot..." onkeyup="handleInput(event)">
+                    <input type="text" id="inputLot" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan Nomor Lot" onkeyup="handleInput(event)">
                     <svg class="clear-icon" id="clearBtn" onclick="resetPencarian()" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </div>
                 <button onclick="lakukanPencarian()" class="btn-search">Cari Data</button>
@@ -152,7 +168,7 @@ function lakukanPencarian() {
     
     timelineWrapper.style.display = "block";
     timelineBody.className = "timeline-list"; 
-    timelineBody.innerHTML = `<div style="padding: 20px 0;"><div class="shimmer-line"></div><div class="shimmer-line" style="width: 70%;"></div></div>`;
+    timelineBody.innerHTML = `<div style="padding: 15px 0;"><div class="shimmer-line"></div><div class="shimmer-line" style="width: 70%;"></div></div>`;
     infoTambahan.style.display = "none";
     alertOverdue.style.display = "none";
 
@@ -193,7 +209,6 @@ function lakukanPencarian() {
                     stringJam = bagianWaktu[1] ? bagianWaktu[1] + " WIB" : "-";
                 }
 
-                // 🔗 KUNCI LOGIKA UTAMA: Pasang lencana Kolom N baik di MOBILE maupun di APPAREL
                 let labelTambahan = "";
                 if ((nfUpper.includes("APP") || nfUpper.includes("REPORT INTEGRASI MO") || nfUpper.includes("MOBILE")) && teksKolomN !== "") {
                     labelTambahan = `<span class="badge-keterangan-n">${teksKolomN}</span>`;
@@ -231,9 +246,9 @@ function lakukanPencarian() {
                             ${labelTambahan}
                         </div>
                         <div class="timeline-meta">
-                            <span>Folder: <b>${namaFolder}</b></span> •
-                            <span>Sheet: <span class="badge-sheet">${row.nama_sheet}</span></span> •
-                            <span>No Lot: <span class="font-mono">${row.no_lot}</span></span>
+                            <div><span class="meta-label">Folder:</span><span class="meta-val">${namaFolder}</span></div>
+                            <div><span class="meta-label">Sheet:</span><span class="meta-val"><span class="badge-sheet">${row.nama_sheet}</span></span></div>
+                            <div><span class="meta-label">No Lot:</span><span class="meta-val font-mono">${row.no_lot}</span></div>
                         </div>
                         <div>
                             <button onclick="unduhFile('${row.file_path.replace(/\\/g, '\\\\')}')" class="btn-action-view">
