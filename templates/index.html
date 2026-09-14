@@ -115,7 +115,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="header">
@@ -134,8 +133,9 @@
                 <div id="statTotalOverdue" class="stat-value">...</div>
                 <span class="stat-month-tag" style="color: #df1c1c;">GLOBAL REALTIME</span>
             </div>
+            <!-- 🎉 NAMA BARU: Kartu telah resmi diubah menjadi Despatch FGH -->
             <div class="stat-card card-fgh clickable-card" onclick="bukaModalFilter()">
-                <div class="stat-label">🎉 Sukses FGH</div>
+                <div class="stat-label">🎉 Despatch FGH</div>
                 <div id="statTotalFgh" class="stat-value">...</div>
                 <span id="tagBulanFgh" class="stat-month-tag">-</span>
             </div>
@@ -169,7 +169,7 @@
     <!-- PANEL POP-UP WINDOW SELEKTOR BULAN -->
     <div id="modalFilter" class="modal-overlay">
         <div class="modal-card">
-            <div class="modal-title">📆 Saring Riwayat Laporan</div>
+            <div class="modal-title">📢 Saring Riwayat Laporan</div>
             <div class="month-selector-grid">
                 <button id="m1" class="btn-month-node" onclick="pilihBulanNode(1, 'Jan')">Jan</button>
                 <button id="m2" class="btn-month-node" onclick="pilihBulanNode(2, 'Feb')">Feb</button>
@@ -189,11 +189,11 @@
             </div>
         </div>
     </div>
-
-    <script>
+<script>
+// 🔗 REVISI LOGIKA TANGGAL: Tahun dikunci dinamis membaca waktu berjalan pada HP komputer user (Anti Data 0)
 let BULAN_AKTIF = new Date().getMonth() + 1;
+let TAHUN_AKTIF = new Date().getFullYear(); 
 let NAMA_BULAN_TEKS = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-let TAHUN_AKTIF = 2026; 
 
 document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('tagBulanOrder').innerText = NAMA_BULAN_TEKS[BULAN_AKTIF];
@@ -259,6 +259,14 @@ function resetPencarian() {
     document.getElementById('timelineBody').className = "timeline-list";
     document.getElementById('inputLot').focus();
 }
+function parseIntoDate(str) {
+    if (!str || str === "-") return { tgl: "-", jam: "-" };
+    const parts = str.split(' ');
+    return {
+        tgl: parts[0] || "-",
+        jam: parts[1] ? parts[1] + " WIB" : "-"
+    };
+}
 
 function ambilNamaFolder(filePath) {
     if (!filePath) return "-";
@@ -320,13 +328,7 @@ function lakukanPencarian() {
                 const namaFolder = ambilNamaFolder(row.file_path);
                 const nfUpper = namaFolder.toUpperCase();
                 
-                let stringTgl = "-";
-                let stringJam = "-";
-                if (row.tanggal_input && row.tanggal_input !== "-") {
-                    const bagianWaktu = row.tanggal_input.split(' ');
-                    stringTgl = bagianWaktu;
-                    stringJam = bagianWaktu ? bagianWaktu + " WIB" : "-";
-                }
+                const waktuObj = parseIntoDate(row.tanggal_input);
 
                 let labelTambahan = "";
                 if ((nfUpper.includes("APP") || nfUpper.includes("REPORT INTEGRASI MO") || nfUpper.includes("MOBILE")) && teksKolomN !== "") {
@@ -353,8 +355,8 @@ function lakukanPencarian() {
                 divItem.className = classKustom;
                 divItem.innerHTML = `
                     <div class="timeline-time">
-                        <div class="date-bold">${stringTgl}</div>
-                        <div>${stringJam}</div>
+                        <div class="date-bold">${waktuObj.tgl}</div>
+                        <div>${waktuObj.jam}</div>
                     </div>
                     <div class="timeline-badge-wrapper">
                         <div class="timeline-badge"></div>
