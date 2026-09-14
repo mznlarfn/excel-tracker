@@ -1,15 +1,17 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/app.py",
-      "use": "@vercel/python"
-    }
-  ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "src": "/api/statistik",
+      "dest": "api/app.py"
+    },
+    {
+      "src": "/api/cari",
+      "dest": "api/app.py"
+    },
+    {
+      "src": "/api/buka",
+      "dest": "api/app.py"
     },
     {
       "src": "/(.*)",
