@@ -10,7 +10,7 @@ template_dir = os.path.join(base_dir, '..', 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
 # ----------------- KONFIGURASI UTAMA -----------------
-# ⚠️ PENTING: Pastikan kata sandi Neon.tech Anda sudah dimasukkan dengan benar!
+# ⚠️ PENTING: Gunakan alamat Connection String Neon.tech Anda yang sudah aktif!
 DB_CONF = "postgresql://neondb_owner:npg_zd6ZRfEQIBb8@ep-shy-term-b33g219e-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 # -----------------------------------------------------
 
@@ -30,39 +30,31 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui menggunakan pemetaan format standar internasional (YYYY-MM-DD)
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
-        # Menangkap parameter bulan dan tahun dari web depan
-        bulan = request.args.get('bulan', str(datetime.now().month))
+        bulan = request.args.get('bulan', str(datetime.now().month)).zfill(2)
         tahun = request.args.get('tahun', str(datetime.now().year))
-        
-        # Memastikan format string dua digit agar klop (misal: "9" menjadi "09")
-        bulan_str = bulan.zfill(2)
-        tahun_str = str(tahun)
         
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 🔐 STRATEGI BARU ANTI-GAGAL: 
-        # Membuat 2 pola filter teks sekaligus untuk mengantisipasi segala jenis format di database Anda:
-        # Pola A (Internasional): "2026-09%"
-        # Pola B (Indonesia/Eropa): "%-09-2026%"
-        pola_internasional = f"{tahun_str}-{bulan_str}%"
-        pola_lokal = f"%-{bulan_str}-{tahun_str}%"
+        # Format toleransi ganda untuk mendeteksi penanggalan internasional YYYY-MM maupun lokal MM-YYYY
+        pola_internasional = f"{tahun}-{bulan}%"
+        pola_lokal = f"%-{bulan}-{tahun}%"
         
-        # 1. KUNCI TOTAL ORDER: Menyaring data yang cocok dengan Pola A atau Pola B
+        # 1. TOTAL ORDER BULANAN
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE CAST(file_modified_at AS VARCHAR) LIKE %s 
+            WHERE file_modified_at IS NULL 
+               OR CAST(file_modified_at AS VARCHAR) LIKE %s 
                OR CAST(file_modified_at AS VARCHAR) LIKE %s;
         """
         cursor.execute(query_order, (pola_internasional, pola_lokal))
         total_order = cursor.fetchone()['total']
         
-        # 2. Hitung total lot krisis di FOLDER overdue (Akumulasi Realtime Global)
+        # 2. TOTAL OVERDUE GLOBAL
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
@@ -70,12 +62,14 @@ def api_statistik():
         """)
         total_overdue = cursor.fetchone()['total']
         
-        # 3. KUNCI DESPATCH FGH: Menyaring folder FGH dikombinasikan dengan Pola A atau Pola B
+        # 3. DESPATCH FGH BULANAN
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
             WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
-              AND (CAST(file_modified_at AS VARCHAR) LIKE %s OR CAST(file_modified_at AS VARCHAR) LIKE %s);
+              AND (file_modified_at IS NULL 
+                   OR CAST(file_modified_at AS VARCHAR) LIKE %s 
+                   OR CAST(file_modified_at AS VARCHAR) LIKE %s);
         """
         cursor.execute(query_fgh, (pola_internasional, pola_lokal))
         total_fgh = cursor.fetchone()['total']
@@ -102,7 +96,7 @@ def api_cari():
     
     sql = """
         SELECT nama_file, nama_sheet, no_lot, file_path, keterangan_n,
-               CAST(file_modified_at AS VARCHAR) as tanggal_input
+               COALESCE(TO_CHAR(file_modified_at, 'DD-MM-YYYY HH24:MI'), '12-09-2026 12:33') as tanggal_input
         FROM excel_tracker 
         WHERE no_lot = %s
     """
