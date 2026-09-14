@@ -9,9 +9,19 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; color: #1e293b; padding: 30px 16px; line-height: 1.5; }
         .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         
-        .header { text-align: center; padding: 10px 0; margin-bottom: 4px; }
-        .header h1 { font-size: 26px; font-weight: 800; color: #003399; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; margin-bottom: 8px; }
+        .header { text-align: center; padding: 5px 0; }
+        .header h1 { font-size: 26px; font-weight: 800; color: #003399; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; margin-bottom: 6px; }
         .header p { color: #64748b; font-size: 14px; font-weight: 500; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 4px; }
+        .stat-card { background: #ffffff; border-radius: 14px; padding: 14px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px -5px rgba(0,0,0,0.02); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .stat-value { font-size: 22px; font-weight: 800; color: #0f172a; }
+        .card-overdue .stat-label { color: #df1c1c; }
+        .card-overdue .stat-value { color: #dc2626; }
+        .card-fgh .stat-label { color: #16a34a; }
+        .card-fgh .stat-value { color: #16a34a; }
         
         .card-search { background: #ffffff; border-radius: 18px; padding: 20px; box-shadow: 0 10px 25px -5px rgba(0, 51, 153, 0.04); border: 1px solid #e2e8f0; }
         .search-group { display: flex; gap: 12px; position: relative; }
@@ -23,37 +33,28 @@
         
         .btn-search { background: #003399; color: #fff; border: none; padding: 0 28px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
         .btn-search:hover { background: #002277; }
-        
         .status-area { margin-top: 12px; font-size: 13.5px; font-weight: 600; display: none; }
-        .text-blue { color: #003399; } .text-green { color: #16a34a; } .text-red { color: #dc2626; }
-        
-        .alert-overdue-inline { background: #fff1f2; border: 1px solid #fecdd3; border-top: 4px solid #e11d48; color: #9f1239; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; display: none; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+
+                .alert-overdue-inline { background: #fff1f2; border: 1px solid #fecdd3; border-top: 4px solid #e11d48; color: #9f1239; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; display: none; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .alert-overdue-inline svg { width: 16px; height: 16px; color: #e11d48; }
         .alert-despatch { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: 4px solid #16a34a; color: #166534; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 15px; text-align: center; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: none; }
 
-        /* ─── LINIMASA ADAPTIF PERFECT ALIGNMENT ─── */
         .timeline-container { background: #ffffff; border-radius: 20px; padding: 28px 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); display: none; position: relative; }
         .timeline-list { position: relative; list-style: none; padding-left: 0; }
-        
-        /* 🔗 SOLUSI MUTLAK: Mengunci koordinat garis abu agar selalu mengekor posisi persis di tengah kolom badge pembungkus */
         .timeline-list.has-data::before { content: ''; position: absolute; left: calc(120px + 21px); top: 15px; height: calc(100% - 30px); width: 2px; background: #cbd5e1; z-index: 1; }
         
         .timeline-item { display: flex; margin-bottom: 24px; position: relative; width: 100%; }
         .timeline-item:last-child { margin-bottom: 0; }
         
-        /* Blok Waktu Kiri (Lebar Tetap Dikunci di Layar Desktop) */
         .timeline-time { width: 120px; text-align: right; font-size: 13px; color: #64748b; font-weight: 500; padding-top: 2px; padding-right: 15px; flex-shrink: 0; }
         .timeline-time .date-bold { font-size: 13.5px; color: #1e293b; font-weight: 700; margin-bottom: 1px; }
         
-        /* Pembungkus Badge Tengah */
         .timeline-badge-wrapper { width: 42px; display: flex; justify-content: center; position: relative; flex-shrink: 0; }
         .timeline-badge { width: 14px; height: 14px; border-radius: 50%; background: #ffffff; border: 3px solid #94a3b8; z-index: 2; margin-top: 4px; box-shadow: 0 0 0 4px #ffffff; }
         
-        /* Centang Hijau FGH */
         .timeline-item.is-fgh .timeline-badge { width: 22px; height: 22px; background: #16a34a; border: 3px solid #ffffff; box-shadow: 0 0 0 3px #16a34a; margin-top: 1px; display: flex; align-items: center; justify-content: center; z-index: 3; }
         .timeline-item.is-fgh .timeline-badge::after { content: '✓'; color: #ffffff; font-size: 11px; font-weight: 900; }
-
-                /* Konten Detail Laporan */
+        
         .timeline-content { flex-grow: 1; padding-left: 10px; padding-top: 1px; min-width: 0; }
         .timeline-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .timeline-meta { font-size: 12.5px; color: #64748b; font-weight: 500; display: flex; flex-direction: column; gap: 3px; background: #f8fafc; padding: 10px 14px; border-radius: 10px; border: 1px solid #f1f5f9; margin-top: 4px; }
@@ -73,15 +74,16 @@
         .shimmer-line { height: 14px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 4px; margin-bottom: 6px; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* 📱 RESPONSIVITAS TOTAL SELURUH JENIS HP LINTAS UKURAN SCREEN */
         @media (max-width: 640px) {
             body { padding: 16px 8px; }
             .header h1 { font-size: 20px; }
+            .stats-grid { gap: 8px; }
+            .stat-card { padding: 10px 6px; }
+            .stat-label { font-size: 9.5px; }
+            .stat-value { font-size: 18px; }
             .search-group { flex-direction: column; gap: 10px; }
             .btn-search { width: 100%; padding: 14px 0; font-size: 15px; }
             .timeline-container { padding: 20px 10px; }
-            
-            /* 🔗 PENYELARASAN DINAMIS DI HP: Ukuran lebar kolom jam dikurangi dan garis ikut bergeser presisi mengikuti pergerakan lencana */
             .timeline-list.has-data::before { left: calc(75px + 12px); }
             .timeline-time { width: 75px; text-align: left; font-size: 11px; padding-right: 5px; }
             .timeline-time .date-bold { font-size: 11.5px; }
@@ -97,6 +99,21 @@
         <div class="header">
             <h1>Tracker No Lot Departmen Finishing</h1>
             <p>Cari dan lacak order berdasarkan Nomor Lot secara instan.</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">📦 Total Order</div>
+                <div id="statTotalOrder" class="stat-value">...</div>
+            </div>
+            <div class="stat-card card-overdue">
+                <div class="stat-label">⏱️ Lot Overdue</div>
+                <div id="statTotalOverdue" class="stat-value">...</div>
+            </div>
+            <div class="stat-card card-fgh">
+                <div class="stat-label">🎉 Sukses FGH</div>
+                <div id="statTotalFgh" class="stat-value">...</div>
+            </div>
         </div>
         
         <div class="card-search">
@@ -125,6 +142,25 @@
     </div>
 
     <script>
+document.addEventListener("DOMContentLoaded", function() {
+    muatDataDashboard();
+});
+
+function muatDataDashboard() {
+    fetch('/api/statistik')
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === "success") {
+                document.getElementById('statTotalOrder').innerText = data.total_order;
+                document.getElementById('statTotalOverdue').innerText = data.total_overdue;
+                document.getElementById('statTotalFgh').innerText = data.total_fgh;
+            }
+        })
+        .catch(err => {
+            console.log("Gagal memuat widget ringkasan.");
+        });
+}
+
 function handleInput(event) {
     const input = document.getElementById('inputLot');
     const clearBtn = document.getElementById('clearBtn');
@@ -205,8 +241,8 @@ function lakukanPencarian() {
                 let stringJam = "-";
                 if (row.tanggal_input && row.tanggal_input !== "-") {
                     const bagianWaktu = row.tanggal_input.split(' ');
-                    stringTgl = bagianWaktu[0];
-                    stringJam = bagianWaktu[1] ? bagianWaktu[1] + " WIB" : "-";
+                    stringTgl = bagianWaktu;
+                    stringJam = bagianWaktu ? bagianWaktu + " WIB" : "-";
                 }
 
                 let labelTambahan = "";
@@ -232,6 +268,8 @@ function lakukanPencarian() {
 
                 const divItem = document.createElement('div');
                 divItem.className = classKustom;
+                
+                // 🔗 KUNCI PERUBAHAN: Baris pertama meta langsung menampilkan namaFolder tanpa teks label "Folder:"
                 divItem.innerHTML = `
                     <div class="timeline-time">
                         <div class="date-bold">${stringTgl}</div>
@@ -246,7 +284,7 @@ function lakukanPencarian() {
                             ${labelTambahan}
                         </div>
                         <div class="timeline-meta">
-                            <div><span class="meta-label">Folder:</span><span class="meta-val">${namaFolder}</span></div>
+                            <div><span class="meta-label">Progress:</span><span class="meta-val" style="color: #003399;">${namaFolder}</span></div>
                             <div><span class="meta-label">Sheet:</span><span class="meta-val"><span class="badge-sheet">${row.nama_sheet}</span></span></div>
                             <div><span class="meta-label">No Lot:</span><span class="meta-val font-mono">${row.no_lot}</span></div>
                         </div>
@@ -261,6 +299,7 @@ function lakukanPencarian() {
             });
             if (ditemukanFGH) { infoTambahan.style.display = "block"; }
             if (ditemukanOverdueTemplate) { alertOverdue.style.display = "flex"; }
+            muatDataDashboard();
         })
         .catch(err => {
             statusArea.className = "status-area text-red";
