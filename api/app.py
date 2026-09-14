@@ -30,30 +30,33 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
+# 📊 API STATISTIK: Mengunci filter pencarian bulan dengan metode pemetaan TO_CHAR penanggalan universal
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
+        # Menangkap parameter bulan dan tahun dari web depan
         bulan = request.args.get('bulan', str(datetime.now().month)).zfill(2)
         tahun = request.args.get('tahun', str(datetime.now().year))
         
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        pola_internasional = f"{tahun}-{bulan}%"
-        pola_lokal = f"%-{bulan}-{tahun}%"
+        # 🔐 STRATEGI PAMUNGKAS ANTI-GAGAL:
+        # Mengubah file_modified_at menjadi teks string berformat 'MM-YYYY' murni.
+        # Strategi ini memotong semua komparasi jam, menit, detik, dan error zona waktu server internasional!
+        filter_bulan_tahun = f"{bulan}-{tahun}"
         
         # 1. TOTAL ORDER BULANAN
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
             WHERE file_modified_at IS NULL 
-               OR CAST(file_modified_at AS VARCHAR) LIKE %s 
-               OR CAST(file_modified_at AS VARCHAR) LIKE %s;
+               OR TO_CHAR(file_modified_at, 'MM-YYYY') = %s;
         """
-        cursor.execute(query_order, (pola_internasional, pola_lokal))
+        cursor.execute(query_order, (filter_bulan_tahun,))
         total_order = cursor.fetchone()['total']
         
-        # 2. TOTAL OVERDUE GLOBAL
+        # 2. TOTAL OVERDUE GLOBAL REALTIME
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
@@ -67,10 +70,9 @@ def api_statistik():
             FROM excel_tracker 
             WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
               AND (file_modified_at IS NULL 
-                   OR CAST(file_modified_at AS VARCHAR) LIKE %s 
-                   OR CAST(file_modified_at AS VARCHAR) LIKE %s);
+                   OR TO_CHAR(file_modified_at, 'MM-YYYY') = %s);
         """
-        cursor.execute(query_fgh, (pola_internasional, pola_lokal))
+        cursor.execute(query_fgh, (filter_bulan_tahun,))
         total_fgh = cursor.fetchone()['total']
         
         cursor.close()
