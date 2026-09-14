@@ -30,7 +30,7 @@
         
         .alert-overdue-inline { background: #fff1f2; border: 1px solid #fecdd3; border-top: 4px solid #e11d48; color: #9f1239; padding: 14px 20px; border-radius: 14px; font-weight: 800; font-size: 15px; display: none; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .alert-overdue-inline svg { width: 18px; height: 18px; color: #e11d48; }
-        .alert-despatch { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: 4px solid #16a34a; color: #166534; padding: 18px; border-radius: 14px; font-weight: 800; font-size: 16px; text-align: center; letter-spacing: 1px; display: none; }
+        .alert-despatch { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: 4px solid #16a34a; color: #166534; padding: 18px; border-radius: 14px; font-weight: 800; font-size: 16px; text-align: center; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: none; }
 
         /* ─── STRUKTUR TIMELINE GAYA DHL ─── */
         .timeline-container { background: #ffffff; border-radius: 20px; padding: 32px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); display: none; position: relative; }
@@ -46,7 +46,6 @@
         .timeline-badge-wrapper { width: 42px; display: flex; justify-content: center; position: relative; flex-shrink: 0; }
         .timeline-badge { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: 3px solid #94a3b8; z-index: 2; margin-top: 4px; box-shadow: 0 0 0 4px #ffffff; }
         
-        /* Modifikasi Kunci: Efek Centang Hijau eksklusif hanya aktif jika class 'is-fgh' dipicu */
         .timeline-item.is-fgh .timeline-badge { width: 22px; height: 22px; background: #16a34a; border: 4px solid #ffffff; box-shadow: 0 0 0 3px #16a34a; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
         .timeline-item.is-fgh .timeline-badge::after { content: '✓'; color: #ffffff; font-size: 11px; font-weight: 900; }
         
@@ -88,7 +87,7 @@
             <div class="search-group">
                 <div class="input-wrapper">
                     <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    <input type="text" id="inputLot" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan 8 digit Nomor Lot..." onkeyup="handleInput(event)">
+                    <input type="text" id="inputLot" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan Nomor Lot" onkeyup="handleInput(event)">
                     <svg class="clear-icon" id="clearBtn" onclick="resetPencarian()" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </div>
                 <button onclick="lakukanPencarian()" class="btn-search">Cari Data</button>
@@ -192,15 +191,19 @@ function lakukanPencarian() {
                     labelTambahan = `<span class="badge-keterangan-n">${teksKolomN}</span>`;
                 }
 
-                // 🔗 PERUBAHAN LOGIKA UTAMA:
-                // 1. Judul status sekarang murni mengambil nama folder (bukan 'Processed/Archived' lagi)
-                // 2. Centang hijau dikunci khusus hanya untuk folder FGH (baik di atas maupun di bawah)
+                // 🔗 KUNCI UTAMA: Logika Pengonversi Nama Judul Dinamis
                 let teksStatus = namaFolder;
                 let classKustom = "timeline-item";
                 
-                if (nfUpper.includes("FGH")) {
+                if (nfUpper.includes("DTH 2026")) {
+                    teksStatus = "DTH";
+                } else if (nfUpper.includes("REPORT INTEGRASI MO")) {
+                    teksStatus = "MOBILE";
+                } else if (nfUpper.includes("APP")) {
+                    teksStatus = "APPAREL";
+                } else if (nfUpper.includes("FGH")) {
                     teksStatus = "Delivered / Received";
-                    classKustom = "timeline-item is-fgh"; // Memicu lingkaran hijau centang
+                    classKustom = "timeline-item is-fgh"; // Memicu ikon centang hijau
                 }
 
                 const divItem = document.createElement('div');
@@ -215,7 +218,7 @@ function lakukanPencarian() {
                     </div>
                     <div class="timeline-content">
                         <div class="timeline-title">
-                            <span style="color: #003399; text-transform: uppercase;">${teksStatus}</span> 
+                            <span style="color: #003399; font-weight: 800; letter-spacing: 0.3px;">${teksStatus}</span> 
                             ${labelTambahan}
                         </div>
                         <div class="timeline-meta">
@@ -253,3 +256,5 @@ function unduhFile(filePath) {
 </script>
 </body>
 </html>
+
+
