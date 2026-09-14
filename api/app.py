@@ -30,13 +30,13 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui total agar mendukung filter penyortiran per bulan dinamis
+# 📊 API STATISTIK: Diperbarui dengan konversi tipe data integer (CAST) agar hitungan bulan akurat 100%
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
-        # Ambil filter bulan dan tahun dari request. Jika tidak dikirim, gunakan bulan berjalan saat ini
-        bulan = request.args.get('bulan', str(datetime.now().month))
-        tahun = request.args.get('tahun', str(datetime.now().year))
+        # Mengubah input string ("09") menjadi integer murni (9) agar klop dengan database SQL
+        bulan = int(request.args.get('bulan', datetime.now().month))
+        tahun = int(request.args.get('tahun', datetime.now().year))
         
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -45,13 +45,13 @@ def api_statistik():
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE EXTRACT(MONTH FROM file_modified_at) = %s 
-              AND EXTRACT(YEAR FROM file_modified_at) = %s;
+            WHERE CAST(EXTRACT(MONTH FROM file_modified_at) AS INTEGER) = %s 
+              AND CAST(EXTRACT(YEAR FROM file_modified_at) AS INTEGER) = %s;
         """
         cursor.execute(query_order, (bulan, tahun))
         total_order = cursor.fetchone()['total']
         
-        # 2. Hitung total lot krisis di FOLDER overdue (Tetap akumulasi global / tidak dikunci bulan agar krisis terpantau)
+        # 2. Hitung total lot krisis di FOLDER overdue (Akumulasi Realtime Global)
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
@@ -64,8 +64,8 @@ def api_statistik():
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
             WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
-              AND EXTRACT(MONTH FROM file_modified_at) = %s 
-              AND EXTRACT(YEAR FROM file_modified_at) = %s;
+              AND CAST(EXTRACT(MONTH FROM file_modified_at) AS INTEGER) = %s 
+              AND CAST(EXTRACT(YEAR FROM file_modified_at) AS INTEGER) = %s;
         """
         cursor.execute(query_fgh, (bulan, tahun))
         total_fgh = cursor.fetchone()['total']
