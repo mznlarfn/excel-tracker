@@ -193,23 +193,23 @@ function lakukanPencarian() {
                     stringJam = bagianWaktu[1] ? bagianWaktu[1] + " WIB" : "-";
                 }
 
+                // 🔗 KUNCI LOGIKA UTAMA: Pasang lencana Kolom N baik di MOBILE maupun di APPAREL
                 let labelTambahan = "";
-                if ((nfUpper.includes("APP") || nfUpper.includes("FOOTWEAR")) && teksKolomN !== "") {
+                if ((nfUpper.includes("APP") || nfUpper.includes("REPORT INTEGRASI MO") || nfUpper.includes("MOBILE")) && teksKolomN !== "") {
                     labelTambahan = `<span class="badge-keterangan-n">${teksKolomN}</span>`;
                 }
 
-                // 🔗 KUNCI LOGIKA: Konversi Nama Status Menjadi Huruf Besar / Kapital Mutlak
                 let teksStatus = namaFolder.toUpperCase(); 
                 let classKustom = "timeline-item";
                 
                 if (nfUpper.includes("DTH 2026")) {
                     teksStatus = "DTH";
-                } else if (nfUpper.includes("REPORT INTEGRASI MO")) {
+                } else if (nfUpper.includes("REPORT INTEGRASI MO") || nfUpper.includes("MOBILE")) {
                     teksStatus = "MOBILE";
                 } else if (nfUpper.includes("APP")) {
                     teksStatus = "APPAREL";
                 } else if (nfUpper.includes("OVERDUE")) {
-                    teksStatus = "OVERDUE"; // Kunci utama pemaksaan kapital Overdue
+                    teksStatus = "OVERDUE";
                 } else if (nfUpper.includes("FGH")) {
                     teksStatus = "DELIVERED / RECEIVED";
                     classKustom = "timeline-item is-fgh";
@@ -265,4 +265,3 @@ function unduhFile(filePath) {
 </script>
 </body>
 </html>
-
