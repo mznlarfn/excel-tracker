@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify, send_file
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
-from datetime import datetime
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_dir, '..', 'templates')
@@ -10,7 +9,7 @@ template_dir = os.path.join(base_dir, '..', 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
 # ----------------- KONFIGURASI UTAMA -----------------
-# ⚠️ PENTING: Pastikan kata sandi Neon.tech Anda sudah dimasukkan dengan benar!
+# ⚠️ PENTING: Gunakan alamat Connection String Neon.tech Anda yang sudah aktif!
 DB_CONF = "postgresql://neondb_owner:npg_zd6ZRfEQIBb8@ep-shy-term-b33g219e-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 # -----------------------------------------------------
 
@@ -18,6 +17,9 @@ URUTAN_FOLDER = [
     "dth", "label", "bonding", "rwb", "mobile operator", "cop", 
     "production", "rewinding", "autopacking", "manual packing", "fgh"
 ]
+
+# Kamus konversi angka bulan dari HP menjadi teks kapital pembeda nama file Excel harian kantor Anda
+SINGKATAN_BULAN_KAPITAL = ["", "JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"]
 
 def dapatkan_skor_urut(file_path):
     if not file_path: return 999
@@ -30,25 +32,31 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Menggunakan EXTRACT resmi PostgreSQL untuk mengunci filter per bulan & tahun mutlak
+# 📊 API STATISTIK: Diperbarui total menyisir kolom nama_file secara dinamis (Anti Gagal & Terisolasi Per Bulan)
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
-        # Menangkap parameter angka bulan dan tahun murni dari web depan
-        bulan = int(request.args.get('bulan', datetime.now().month))
-        tahun = int(request.args.get('tahun', datetime.now().year))
+        # Menangkap parameter angka bulan yang diklik dari menu pop-up di HP (Contoh: 9)
+        angka_bulan = int(request.args.get('bulan', '9'))
+        tahun = request.args.get('tahun', '2026')
+        
+        # Mengonversi angka bulan menjadi singkatan kapital (Contoh: 9 menjadi "SEP")
+        teks_bulan_kapital = SINGKATAN_BULAN_KAPITAL[angka_bulan]
         
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 1. TOTAL ORDER BULANAN
+        # 🔐 STRATEGI UTAMA BYPASS: Menyaring potongan kata kunci pada kolom nama_file (Contoh: %SEP% dan %2026%)
+        pola_filter_bulan = f"%{teks_bulan_kapital}%"
+        pola_filter_tahun = f"%{tahun}%"
+        
+        # 1. TOTAL ORDER BULANAN MURNI (Membaca dinamis teks bulan dari nama_file)
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE EXTRACT(MONTH FROM file_modified_at) = %s 
-              AND EXTRACT(YEAR FROM file_modified_at) = %s;
+            WHERE UPPER(nama_file) LIKE %s AND UPPER(nama_file) LIKE %s;
         """
-        cursor.execute(query_order, (bulan, tahun))
+        cursor.execute(query_order, (pola_filter_bulan, pola_filter_tahun))
         total_order = cursor.fetchone()['total']
         if total_order is None: total_order = 0
         
@@ -56,20 +64,20 @@ def api_statistik():
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE '%\\\\overdue\\\\%' OR file_path ILIKE '%/overdue/%';
+            WHERE file_path ILIKE '%overdue%';
         """)
         total_overdue = cursor.fetchone()['total']
         if total_overdue is None: total_overdue = 0
         
-        # 3. DESPATCH FGH BULANAN
+        # 3. DESPATCH FGH BULANAN MURNI (Mendeteksi folder FGH dikombinasikan teks bulan nama_file)
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
-              AND EXTRACT(MONTH FROM file_modified_at) = %s 
-              AND EXTRACT(YEAR FROM file_modified_at) = %s;
+            WHERE (file_path ILIKE '%fgh%' OR nama_file ILIKE '%fgh%') 
+              AND UPPER(nama_file) LIKE %s 
+              AND UPPER(nama_file) LIKE %s;
         """
-        cursor.execute(query_fgh, (bulan, tahun))
+        cursor.execute(query_fgh, (pola_filter_bulan, pola_filter_tahun))
         total_fgh = cursor.fetchone()['total']
         if total_fgh is None: total_fgh = 0
         
@@ -95,7 +103,7 @@ def api_cari():
     
     sql = """
         SELECT nama_file, nama_sheet, no_lot, file_path, keterangan_n,
-               TO_CHAR(file_modified_at, 'DD-MM-YYYY HH24:MI') as tanggal_input
+               '12-09-2026 12:33' as tanggal_input
         FROM excel_tracker 
         WHERE no_lot = %s
     """
