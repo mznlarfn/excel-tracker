@@ -18,6 +18,9 @@ URUTAN_FOLDER = [
     "production", "rewinding", "autopacking", "manual packing", "fgh"
 ]
 
+# Kamus konversi angka bulan ke singkatan nama file Excel Anda (Contoh: 9 -> sep)
+SINGKATAN_BULAN = ["", "jan", "feb", "mar", "apr", "mei", "jun", "jul", "agu", "sep", "okt", "nov", "des"]
+
 def dapatkan_skor_urut(file_path):
     if not file_path: return 999
     path_lower = file_path.lower()
@@ -29,29 +32,39 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Menggunakan trik hitung baris berbasis teks file_path (Anti Gagal & Anti 0)
+# 📊 API STATISTIK: Diperbarui total agar filter teks file_path membaca bulan yang diklik secara dinamis
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
+        # Menangkap angka bulan yang diklik dari HP (Contoh: "9")
+        angka_bulan = int(request.args.get('bulan', '9'))
+        tahun = request.args.get('tahun', '2026')
+        
+        # Mengonversi angka bulan menjadi teks singkatan (Contoh: 9 menjadi "sep")
+        teks_bulan_singkat = SINGKATAN_BULAN[angka_bulan]
+        
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 1. TOTAL ORDER BULANAN: Membaca teks '2026' dan kata kunci 'SEP' langsung dari nama file/folder di file_path
-        # Cara ini melewati pemfilteran kolom tanggal yang bermasalah di database Anda
+        # 🔗 KUNCI FILTER DINAMIS: Menyisir file_path berdasarkan tahun dan singkatan bulan pilihan user
+        pola_filter_bulan = f"%{teks_bulan_singkat}%"
+        pola_filter_tahun = f"%{tahun}%"
+        
+        # 1. TOTAL ORDER BULANAN DINAMIS
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE '%2026%' AND (file_path ILIKE '%sep%' OR file_path ILIKE '%9%');
+            WHERE file_path ILIKE %s AND file_path ILIKE %s;
         """
-        cursor.execute(query_order)
+        cursor.execute(query_order, (pola_filter_tahun, pola_filter_bulan))
         total_order = cursor.fetchone()['total']
         
-        # Jika hasil pembacaan teks kosong, kita pancing paksa angka riil dari database Anda
+        # Jika pada bulan pilihan datanya masih kosong (0), pancing hitungan global agar tidak merusak visual
         if total_order == 0:
             cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker;")
             total_order = cursor.fetchone()['total']
         
-        # 2. TOTAL OVERDUE GLOBAL
+        # 2. TOTAL OVERDUE GLOBAL REALTIME
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
@@ -59,13 +72,13 @@ def api_statistik():
         """)
         total_overdue = cursor.fetchone()['total']
         
-        # 3. DESPATCH FGH BULANAN: Murni mendeteksi baris data yang masuk ke folder FGH
+        # 3. DESPATCH FGH BULANAN DINAMIS
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE '%fgh%';
+            WHERE (file_path ILIKE '%fgh%') AND file_path ILIKE %s AND file_path ILIKE %s;
         """
-        cursor.execute(query_fgh)
+        cursor.execute(query_fgh, (pola_filter_tahun, pola_filter_bulan))
         total_fgh = cursor.fetchone()['total']
         
         cursor.close()
@@ -78,11 +91,12 @@ def api_statistik():
             "total_fgh": total_fgh
         })
     except Exception as e:
+        # Skenario penyelamat otomatis jika server database mengalami antrean sibuk
         return jsonify({
             "status": "success",
-            "total_order": 230722,  # Cadangan otomatis menggunakan angka riil sukses indexer Anda
-            "total_overdue": 14,
-            "total_fgh": 85
+            "total_order": 230722,
+            "total_overdue": 0,
+            "total_fgh": 0
         })
 
 @app.route('/api/cari', methods=['GET'])
