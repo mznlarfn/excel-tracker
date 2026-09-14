@@ -15,6 +15,7 @@
         
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 4px; }
         
+        /* Desain Kartu Statistik Dashboard Atas */
         .stat-card { background: #ffffff; border-radius: 14px; padding: 14px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px -5px rgba(0,0,0,0.02); transition: all 0.2s; }
         .clickable-card { cursor: pointer; position: relative; }
         .clickable-card:hover { transform: translateY(-3px); border-color: #003399; box-shadow: 0 6px 16px rgba(0, 51, 153, 0.05); }
@@ -30,7 +31,8 @@
         .card-fgh .stat-value { color: #16a34a; }
         .card-fgh .stat-month-tag { color: #16a34a; }
 
-                .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px; backdrop-filter: blur(2px); }
+                /* Jendela Pop-up Selektor Bulan Digital */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px; backdrop-filter: blur(2px); }
         .modal-card { background: #ffffff; width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes modalPop { from { transform: scale(0.9) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
         .modal-title { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
@@ -56,6 +58,7 @@
         .alert-overdue-inline svg { width: 16px; height: 16px; color: #e11d48; }
         .alert-despatch { background: #f0fdf4; border: 1px solid #bbf7d0; border-top: 4px solid #16a34a; color: #166534; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 15px; text-align: center; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: none; }
 
+        /* Detail Desain Komponen Garis Waktu Linimasa */
         .timeline-container { background: #ffffff; border-radius: 20px; padding: 28px 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); display: none; position: relative; }
         .timeline-list { position: relative; list-style: none; padding-left: 0; }
         .timeline-list.has-data::before { content: ''; position: absolute; left: calc(120px + 21px); top: 15px; height: calc(100% - 30px); width: 2px; background: #cbd5e1; z-index: 1; }
@@ -162,7 +165,7 @@
         <div id="informasiTambahan" class="alert-despatch">ORDER SUDAH DI DESPATCH</div>
     </div>
 
-    <!-- PANEL POP-UP WINDOW SELEKTOR BULAN -->
+    <!-- PANEL POP-UP WINDOW SELEKTOR BULAN (🔗 REVISI TEKS: Singkatan disamakan dengan backend) -->
     <div id="modalFilter" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-title">📆 Saring Riwayat Laporan</div>
@@ -187,12 +190,10 @@
     </div>
 
     <script>
-// 🔗 KUNCI TOTAL: Memaksa tahun dikunci mati pada angka 2026 agar klop dengan database Neon hasil indexer Anda
-// Ganti baris awal inisialisasi variabel di dalam tag <script> Bagian 4 Anda dengan 3 baris pintar ini:
-let BULAN_AKTIF = new Date().getMonth() + 1; // Otomatis mendeteksi bulan berjalan harian
-let TAHUN_AKTIF = 2026; // Mengunci tahun ke 2026 secara mutlak agar klop dengan database Neon hasil indexer Anda!
+// 🔗 REVISI LOGIKA UTAMA: Mengirimkan angka bulan murni (1-12) ke backend agar klop dengan array python
+let BULAN_AKTIF = 9; // Default awal langsung membuka bulan September (Data aktif Anda)
+let TAHUN_AKTIF = 2026; 
 let NAMA_BULAN_TEKS = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-
 
 document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('tagBulanOrder').innerText = NAMA_BULAN_TEKS[BULAN_AKTIF];
@@ -201,6 +202,7 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function muatDataDashboard() {
+    // Kunci penyelesaian: Mengirimkan parameter angka bulan murni (bukan teks string miring) ke server
     fetch(`/api/statistik?bulan=${BULAN_AKTIF}&tahun=${TAHUN_AKTIF}`)
         .then(response => {
             if (!response.ok) throw new Error("Gagal mengambil data");
@@ -232,7 +234,7 @@ function tutupModalFilter() {
 }
 
 function pilihBulanNode(angkaBulan, teksBulan) {
-    BULAN_AKTIF = angkaBulan;
+    BULAN_AKTIF = angkaBulan; // Menyimpan angka bulan murni (1 s/d 12)
     document.getElementById('tagBulanOrder').innerText = NAMA_BULAN_TEKS[angkaBulan];
     document.getElementById('tagBulanFgh').innerText = NAMA_BULAN_TEKS[angkaBulan];
     
@@ -240,7 +242,7 @@ function pilihBulanNode(angkaBulan, teksBulan) {
     document.getElementById('statTotalFgh').innerText = "...";
     
     tutupModalFilter();
-    muatDataDashboard();
+    muatDataDashboard(); // Menembak ulang API backend dengan bulan baru
 }
 
 function handleInput(event) {
@@ -261,15 +263,8 @@ function resetPencarian() {
 function parseIntoDate(str) {
     if (!str || str === "-") return { tgl: "-", jam: "-" };
     const parts = str.split(' ');
-    // Antisipasi memotong format string tanggal mentah database
-    let tglMentah = parts[0];
+    let tglMentah = parts[0] || "-";
     let jamMentah = parts[1] ? parts[1].substring(0, 5) : "00:00";
-    
-    // Jika database mengembalikan format YYYY-MM-DD, kita balik menjadi DD-MM-YYYY agar rapi
-    if (tglMentah.includes('-') && tglMentah.indexOf('-') === 4) {
-        const subParts = tglMentah.split('-');
-        tglMentah = `${subParts[2]}-${subParts[1]}-${subParts[0]}`;
-    }
     return {
         tgl: tglMentah,
         jam: jamMentah + " WIB"
@@ -331,9 +326,7 @@ function lakukanPencarian() {
 
             data.forEach((row, index) => {
                 if (row.nama_file.toUpperCase().includes('FGH')) { ditemukanFGH = true; }
-                if (row.nama_file.toUpperCase().includes('OVERDUE TEMPLATE')) {
-                    ditemukanOverdueTemplate = true;
-                }
+                if (row.nama_file.toUpperCase().includes('OVERDUE TEMPLATE')) { ditemukanOverdueTemplate = true; }
 
                 const namaFolder = ambilNamaFolder(row.file_path);
                 const nfUpper = namaFolder.toUpperCase();
