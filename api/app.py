@@ -39,7 +39,6 @@ def api_statistik():
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Format toleransi ganda untuk mendeteksi penanggalan internasional YYYY-MM maupun lokal MM-YYYY
         pola_internasional = f"{tahun}-{bulan}%"
         pola_lokal = f"%-{bulan}-{tahun}%"
         
