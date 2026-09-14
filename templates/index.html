@@ -9,9 +9,12 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; color: #1e293b; padding: 40px 16px; }
         .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
         
-        /* PERUBAHAN UTAMA: Desain Header Sejajar Kesamping */
+        /* Desain Header Sejajar Kesamping */
         .header { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px -5px rgba(0, 51, 153, 0.02); border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 24px; text-align: left; }
-        .header img { width: 85px; height: 85px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.03)); }
+        
+        /* Gaya khusus untuk mewarnai Logo SVG Coats agar biru pekat premium */
+        .coats-logo-svg { width: 85px; height: 85px; flex-shrink: 0; fill: #003399; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.03)); }
+        
         .header-text { display: flex; flex-direction: column; gap: 4px; }
         .header h1 { font-size: 24px; font-weight: 800; color: #003399; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; }
         .header p { color: #64748b; font-size: 14px; font-weight: 500; }
@@ -55,12 +58,10 @@
         .shimmer-line { height: 16px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 4px; margin-bottom: 8px; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* 📱 MEDIA QUERIES: RESPONSIVITAS PADA HANDPHONE */
         @media (max-width: 640px) {
             body { padding: 20px 12px; }
-            /* Pada layar HP, header otomatis bergeser atas-bawah agar pas di tengah */
             .header { flex-direction: column; text-align: center; padding: 20px; gap: 12px; }
-            .header img { width: 80px; height: 80px; }
+            .coats-logo-svg { width: 80px; height: 80px; }
             .header h1 { font-size: 20px; }
             .search-group { flex-direction: column; gap: 12px; }
             .btn-search { width: 100%; padding: 15px 0; font-size: 15px; }
@@ -81,9 +82,21 @@
 </head>
 <body>
     <div class="container">
-        <!-- HEADER UTAMA BARU: LOGO SEJAJAR DI SAMPING TEKS -->
+        <!-- HEADER BARU: Menggunakan Struktur Kode Geometri SVG Asli Lingkaran Rantai Coats -->
         <div class="header">
-            <img src="https://wikimedia.org" alt="Coats Logo" onerror="this.src='/templates/logo.png'">
+            <svg class="coats-logo-svg" viewBox="0 0 500 500" xmlns="http://w3.org">
+                <circle cx="250" cy="250" r="230" stroke="#003399" stroke-width="25" fill="none"/>
+                <circle cx="250" cy="110" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <circle cx="350" cy="150" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <circle cx="390" cy="250" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <circle cx="350" cy="350" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <circle cx="250" cy="390" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <circle cx="150" cy="350" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <circle cx="110" cy="250" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <circle cx="150" cy="150" r="45" stroke="#ffffff" stroke-width="12" fill="none"/>
+                <path d="M 120,440 L 120,410 L 380,410 L 380,440 M 170,410 L 170,455 M 330,410 L 330,455" stroke="#ffffff" stroke-width="10" fill="none"/>
+                <text x="250" y="475" font-family="serif" font-size="65" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="10">COATS</text>
+            </svg>
             <div class="header-text">
                 <h1>Tracker No Lot Departmen Finishing</h1>
                 <p>Cari dan lacak order berdasarkan Nomor Lot secara instan.</p>
