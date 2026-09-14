@@ -31,7 +31,7 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui total menyisir kolom NAMA_FILE agar kebal dari gangguan sensor karakter backslash Windows
+# 📊 API STATISTIK: Diperbarui dengan pencarian substring murni tanpa batas slash (Anti Gagal & Akurat)
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
@@ -45,7 +45,7 @@ def api_statistik():
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Mengunci fleksibilitas pembacaan potongan kata kunci pada kolom nama_file (Contoh: %SEP% dan %2026%)
+        # Mengunci fleksibilitas pembacaan potongan kata kunci pada kolom nama_file / file_path
         pola_filter_bulan = f"%{teks_bulan_kapital}%"
         pola_filter_tahun = f"%{tahun}%"
         
@@ -53,30 +53,31 @@ def api_statistik():
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE UPPER(nama_file) LIKE %s AND UPPER(nama_file) LIKE %s;
+            WHERE (UPPER(nama_file) LIKE %s OR UPPER(file_path) LIKE %s) 
+              AND (UPPER(nama_file) LIKE %s OR UPPER(file_path) LIKE %s);
         """
-        cursor.execute(query_order, (pola_filter_bulan, pola_filter_tahun))
+        cursor.execute(query_order, (pola_filter_bulan, pola_filter_bulan, pola_filter_tahun, pola_filter_tahun))
         total_order = cursor.fetchone()['total']
         if total_order is None: total_order = 0
         
-        # 2. TOTAL OVERDUE GLOBAL REALTIME
+        # 2. TOTAL OVERDUE GLOBAL REALTIME (Mencari teks overdue murni tanpa pembatas slash)
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE '%overdue%';
+            WHERE file_path ILIKE '%overdue%' OR nama_file ILIKE '%overdue%';
         """)
         total_overdue = cursor.fetchone()['total']
         if total_overdue is None: total_overdue = 0
         
-        # 3. DESPATCH FGH BULANAN MURNI (Mendeteksi folder FGH dikombinasikan teks bulan nama_file)
+        # 3. DESPATCH FGH BULANAN MURNI (Mendeteksi unsur kata FGH dikombinasikan teks bulan & tahun)
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
             WHERE (file_path ILIKE '%fgh%' OR nama_file ILIKE '%fgh%') 
-              AND UPPER(nama_file) LIKE %s 
-              AND UPPER(nama_file) LIKE %s;
+              AND (UPPER(nama_file) LIKE %s OR UPPER(file_path) LIKE %s)
+              AND (UPPER(nama_file) LIKE %s OR UPPER(file_path) LIKE %s);
         """
-        cursor.execute(query_fgh, (pola_filter_bulan, pola_filter_tahun))
+        cursor.execute(query_fgh, (pola_filter_bulan, pola_filter_bulan, pola_filter_tahun, pola_filter_tahun))
         total_fgh = cursor.fetchone()['total']
         if total_fgh is None: total_fgh = 0
         
