@@ -18,7 +18,6 @@ URUTAN_FOLDER = [
     "production", "rewinding", "autopacking", "manual packing", "fgh"
 ]
 
-# Kamus konversi angka bulan ke huruf BESAR murni sesuai format nama file Excel lantai pabrik Anda
 SINGKATAN_BULAN_KAPITAL = ["", "JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"]
 
 def dapatkan_skor_urut(file_path):
@@ -32,7 +31,6 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui total menyisir kolom NAMA_FILE (Bukan file_path) agar kebal dari sensor Vercel
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
@@ -44,11 +42,10 @@ def api_statistik():
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Mengunci fleksibilitas pembacaan potongan kata kunci pada nama file Excel (Contoh: %SEP% dan %2026%)
         pola_filter_bulan = f"%{teks_bulan_kapital}%"
         pola_filter_tahun = f"%{tahun}%"
         
-        # 1. TOTAL ORDER BULANAN (Menyisir murni kolom nama_file yang kebal sensor)
+        # 1. TOTAL ORDER BULANAN MURNI (Tanpa Fallback Pengaman)
         query_order = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
@@ -56,12 +53,7 @@ def api_statistik():
         """
         cursor.execute(query_order, (pola_filter_bulan, pola_filter_tahun))
         total_order = cursor.fetchone()['total']
-        
-        # Jika user memilih bulan depan yang datanya belum ada, set otomatis ke 0 agar grafik rapi
-        if total_order is None or total_order == 0:
-            # Fallback Pengaman: Jika filter meleset karena variasi nama file, pancing angka total lot unik global agar tidak 0
-            cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker;")
-            total_order = cursor.fetchone()['total']
+        if total_order is None: total_order = 0
         
         # 2. TOTAL OVERDUE GLOBAL REALTIME
         cursor.execute("""
@@ -70,8 +62,9 @@ def api_statistik():
             WHERE file_path ILIKE '%overdue%';
         """)
         total_overdue = cursor.fetchone()['total']
+        if total_overdue is None: total_overdue = 0
         
-        # 3. DESPATCH FGH BULANAN (Mendeteksi folder FGH lewat file_path dikombinasikan nama_file)
+        # 3. DESPATCH FGH BULANAN MURNI (Tanpa Fallback Pengaman)
         query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
@@ -81,11 +74,7 @@ def api_statistik():
         """
         cursor.execute(query_fgh, (pola_filter_bulan, pola_filter_tahun))
         total_fgh = cursor.fetchone()['total']
-        
-        # Hitung fallback khusus FGH agar angka asli 85 lot Anda langsung keluar memancar
-        if total_fgh is None or total_fgh == 0:
-            cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker WHERE file_path ILIKE '%fgh%' OR nama_file ILIKE '%fgh%';")
-            total_fgh = cursor.fetchone()['total']
+        if total_fgh is None: total_fgh = 0
         
         cursor.close()
         conn.close()
@@ -97,13 +86,7 @@ def api_statistik():
             "total_fgh": total_fgh
         })
     except Exception as e:
-        # Skenario penyelamat otomatis darurat agar web tidak blank jika database sedang maintenance
-        return jsonify({
-            "status": "success",
-            "total_order": 230722,
-            "total_overdue": 14,
-            "total_fgh": 85
-        })
+        return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/api/cari', methods=['GET'])
 def api_cari():
