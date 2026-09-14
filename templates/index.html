@@ -142,7 +142,6 @@ function lakukanPencarian() {
     
     if(!query) { alert("Mohon masukkan Nomor Lot terlebih dahulu!"); return; }
     
-    // 🔗 KUNCI PERUBAHAN UTAMA: Memaksa browser melepas kursor ketik kelap-kelip agar hilang saat memuat animasi
     if (document.activeElement) {
         document.activeElement.blur();
     }
@@ -199,7 +198,8 @@ function lakukanPencarian() {
                     labelTambahan = `<span class="badge-keterangan-n">${teksKolomN}</span>`;
                 }
 
-                let teksStatus = namaFolder;
+                // 🔗 KUNCI LOGIKA: Konversi Nama Status Menjadi Huruf Besar / Kapital Mutlak
+                let teksStatus = namaFolder.toUpperCase(); 
                 let classKustom = "timeline-item";
                 
                 if (nfUpper.includes("DTH 2026")) {
@@ -208,8 +208,10 @@ function lakukanPencarian() {
                     teksStatus = "MOBILE";
                 } else if (nfUpper.includes("APP")) {
                     teksStatus = "APPAREL";
+                } else if (nfUpper.includes("OVERDUE")) {
+                    teksStatus = "OVERDUE"; // Kunci utama pemaksaan kapital Overdue
                 } else if (nfUpper.includes("FGH")) {
-                    teksStatus = "Delivered / Received";
+                    teksStatus = "DELIVERED / RECEIVED";
                     classKustom = "timeline-item is-fgh";
                 }
 
