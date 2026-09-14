@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+from datetime import datetime
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_dir, '..', 'templates')
@@ -29,19 +30,28 @@ def dapatkan_skor_urut(file_path):
 def index():
     return render_template('index.html')
 
-# 📊 API STATISTIK: Diperbarui agar hitungan OVERDUE murni menyisir struktur path FOLDER
+# 📊 API STATISTIK: Diperbarui total agar mendukung filter penyortiran per bulan dinamis
 @app.route('/api/statistik', methods=['GET'])
 def api_statistik():
     try:
+        # Ambil filter bulan dan tahun dari request. Jika tidak dikirim, gunakan bulan berjalan saat ini
+        bulan = request.args.get('bulan', str(datetime.now().month))
+        tahun = request.args.get('tahun', str(datetime.now().year))
+        
         conn = psycopg2.connect(DB_CONF)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # 1. Hitung total order lot unik secara keseluruhan
-        cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker;")
+        # 1. Hitung total order lot unik yang dimodifikasi pada bulan & tahun terpilih
+        query_order = """
+            SELECT COUNT(DISTINCT no_lot) as total 
+            FROM excel_tracker 
+            WHERE EXTRACT(MONTH FROM file_modified_at) = %s 
+              AND EXTRACT(YEAR FROM file_modified_at) = %s;
+        """
+        cursor.execute(query_order, (bulan, tahun))
         total_order = cursor.fetchone()['total']
         
-        # 2. 🔐 KUNCI LOGIKA BARU: Menyaring path agar hanya menghitung file yang berada di dalam FOLDER bernama 'overdue'
-        # Menggunakan pencarian pembatas backslash '\\overdue\\' atau slash '/overdue/' untuk memastikan itu adalah nama FOLDER
+        # 2. Hitung total lot krisis di FOLDER overdue (Tetap akumulasi global / tidak dikunci bulan agar krisis terpantau)
         cursor.execute("""
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
@@ -49,12 +59,15 @@ def api_statistik():
         """)
         total_overdue = cursor.fetchone()['total']
         
-        # 3. Hitung berapa banyak lot yang sudah sukses sampai ke FOLDER fgh
-        cursor.execute("""
+        # 3. Hitung total lot yang sukses sampai ke FOLDER fgh pada bulan & tahun terpilih
+        query_fgh = """
             SELECT COUNT(DISTINCT no_lot) as total 
             FROM excel_tracker 
-            WHERE file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%';
-        """)
+            WHERE (file_path ILIKE '%\\\\fgh\\\\%' OR file_path ILIKE '%/fgh/%')
+              AND EXTRACT(MONTH FROM file_modified_at) = %s 
+              AND EXTRACT(YEAR FROM file_modified_at) = %s;
+        """
+        cursor.execute(query_fgh, (bulan, tahun))
         total_fgh = cursor.fetchone()['total']
         
         cursor.close()
