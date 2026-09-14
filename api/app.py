@@ -3,12 +3,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 
-# Menentukan jalur absolut folder agar Vercel tidak tersesat mencari HTML dan Gambar
 base_dir = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_dir, '..', 'templates')
-static_dir = os.path.join(base_dir, '..', 'static')
 
-app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+app = Flask(__name__, template_folder=template_dir)
 
 # ----------------- KONFIGURASI UTAMA -----------------
 # ⚠️ PENTING: Masukkan alamat Connection String Neon.tech Anda di sini!
@@ -30,6 +28,37 @@ def dapatkan_skor_urut(file_path):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+# 📊 API BARU: Menghitung statistik ringkas untuk widget halaman depan
+@app.route('/api/statistik', methods=['GET'])
+def api_statistik():
+    try:
+        conn = psycopg2.connect(DB_CONF)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # 1. Hitung total order lot unik secara keseluruhan
+        cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker;")
+        total_order = cursor.fetchone()['total']
+        
+        # 2. Hitung total lot yang menyangkut di folder Overdue
+        cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker WHERE file_path ILIKE '%overdue%';")
+        total_overdue = cursor.fetchone()['total']
+        
+        # 3. Hitung berapa banyak lot yang sudah sukses sampai ke gudang FGH
+        cursor.execute("SELECT COUNT(DISTINCT no_lot) as total FROM excel_tracker WHERE file_path ILIKE '%fgh%';")
+        total_fgh = cursor.fetchone()['total']
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "status": "success",
+            "total_order": total_order,
+            "total_overdue": total_overdue,
+            "total_fgh": total_fgh
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/cari', methods=['GET'])
 def api_cari():
